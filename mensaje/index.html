@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>Mensaje Encriptado: FranMa Edition</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="icon.png">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- VARIABLES --- */
+        /* MODO OSCURO POR DEFECTO */
+        :root {
+            --font-main: 'Poppins', sans-serif;
+            --font-tech: 'Share Tech Mono', monospace;
+            
+            --bg-grad-start: #0f172a; --bg-grad-end: #000000;
+            --glass-bg: rgba(30, 41, 59, 0.95);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #f3f4f6; --text-sec: #9ca3af;
+            --shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+            
+            --rojo: #f87171; --azul: #60a5fa; --negro: #0f172a; --beige: #4b5563;
+            --btn-grad-start: #2563eb; --btn-grad-end: #1d4ed8;
+            --particle-color: rgba(255,255,255,0.1);
+        }
+
+        /* MODO CLARO (OPCIONAL) */
+        [data-theme="light"] {
+            --bg-grad-start: #f3f4f6; --bg-grad-end: #ffffff;
+            --glass-bg: rgba(255, 255, 255, 0.95);
+            --glass-border: rgba(255, 255, 255, 0.8);
+            --text-main: #1f2937; --text-sec: #6b7280;
+            --shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
+            
+            --rojo: #ef4444; --azul: #3b82f6; --negro: #111827; --beige: #d1d5db;
+            --btn-grad-start: #2563eb; --btn-grad-end: #1d4ed8;
+            --particle-color: rgba(0,0,0,0.1);
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; } 
+        
+        body {
+            font-family: var(--font-main); background: linear-gradient(135deg, var(--bg-grad-start), var(--bg-grad-end));
+            color: var(--text-main); margin: 0; min-height: 100vh; transition: background 0.8s ease;
+            overflow-x: hidden; overflow-y: auto; 
+        }
+
+        /* ATMÓSFERA DE TURNO */
+        body.turn-red { background: linear-gradient(135deg, #450a0a, #000000); }
+        body.turn-blue { background: linear-gradient(135deg, #0c4a6e, #000000); }
+        [data-theme="light"] body.turn-red { background: linear-gradient(135deg, #fef2f2, #fee2e2); }
+        [data-theme="light"] body.turn-blue { background: linear-gradient(135deg, #f0f9ff, #e0f2fe); }
+
+        /* FONDO ANIMADO */
+        #particles-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+        .particle { position: absolute; opacity: 0; animation: floatUp 15s infinite linear; font-size: 24px; color: var(--text-sec); filter: blur(1px); }
+
+        /* UI GENERICA */
+        #main-container { position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; }
+        .screen { display: none; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; width: 100%; animation: fadeIn 0.4s ease-out; padding: 20px; padding-bottom: 50px; }
+        .screen.active { display: flex; }
+
+        .glass-panel { 
+            background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border); box-shadow: var(--shadow); border-radius: 24px;
+        }
+        
+        .btn-main { 
+            background: linear-gradient(45deg, var(--btn-grad-start), var(--btn-grad-end));
+            color: white; border: none; padding: 16px 32px; font-size: 1.1rem; font-weight: 800;
+            border-radius: 16px; cursor: pointer; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+            transition: transform 0.1s; width: 100%; max-width: 320px; text-transform: uppercase; letter-spacing: 1px;
+            position: relative; overflow: hidden; margin-bottom: 10px;
+        }
+        .btn-main:active { transform: scale(0.97); }
+        .btn-icon { background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--text-main); font-size: 1.5rem; padding: 12px; border-radius: 14px; cursor: pointer; transition: background 0.2s; }
+        .btn-icon:hover { background: rgba(0,0,0,0.05); }
+
+        /* INPUT CÓDIGO */
+        .mission-input {
+            background: rgba(128, 128, 128, 0.1); border: 2px solid var(--glass-border); border-radius: 12px;
+            padding: 15px; text-align: center; font-family: var(--font-tech); font-weight: 800;
+            font-size: 2rem; width: 100%; max-width: 250px; margin: 20px 0; color: var(--text-main); letter-spacing: 5px;
+        }
+
+        /* --- JUEGO --- */
+        #timer-container { width: 100%; height: 6px; background: rgba(0,0,0,0.1); position: absolute; top: 0; left: 0; z-index: 10; display: none; }
+        #timer-bar { height: 100%; width: 100%; background: #22c55e; transition: width 1s linear; }
+        
+        #start-timer-btn {
+            position: absolute; top: 150px; z-index: 50;
+            background: var(--text-main); color: var(--glass-bg);
+            padding: 10px 25px; border-radius: 50px; font-weight: 800; font-size: 0.9rem;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3); cursor: pointer; border: none;
+            display: none; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        #game-header { width: 100%; padding: 15px 15px 0 15px; display: flex; flex-direction: column; gap: 10px; align-items: center; position: relative; }
+        
+        #turn-banner { 
+            padding: 8px 20px; border-radius: 50px; text-align: center; color: white; 
+            font-weight: 800; font-size: 1rem; box-shadow: 0 4px 10px rgba(0,0,0,0.15); 
+            transition: background 0.3s; min-width: 150px; text-transform: uppercase;
+        }
+        
+        #score-board { display: flex; gap: 15px; }
+        .score-pill { 
+            padding: 6px 15px; border-radius: 12px; color: white; font-weight: 800; font-size: 0.9rem; 
+            display: flex; align-items: center; gap: 5px; min-width: 70px; justify-content: center;
+        }
+        .bg-rojo { background: var(--rojo); }
+        .bg-azul { background: var(--azul); }
+
+        #board-area { flex-grow: 1; width: 100%; max-width: 800px; margin: 5px auto; padding: 5px; display: flex; align-items: center; justify-content: center; }
+        #grid { 
+            display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(4, 1fr); 
+            gap: 6px; width: 100%; height: 100%; max-height: 65vh; aspect-ratio: 4/5;
+        }
+        
+        .card { 
+            position: relative; background: var(--glass-bg); border-radius: 8px; overflow: hidden; cursor: pointer; 
+            display: flex; align-items: center; justify-content: center; border: 0px solid transparent; 
+            opacity: 0; transition: transform 0.1s; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .card.dealt { opacity: 1; animation: dealCard 0.4s forwards; }
+        .card:active { transform: scale(0.95); }
+        .card img { width: 100%; height: 100%; object-fit: contain; padding: 2px; z-index: 1; transition: opacity 0.3s; }
+        
+        .card-layer { position: absolute; top: 0; left: 0; right: 0; bottom: 0; opacity: 0; z-index: 2; transition: opacity 0.3s, background-color 0.3s; }
+        .card.revealed .card-layer { opacity: 0.65; }
+        .card.revealed.assassin .card-layer { opacity: 0.9; }
+        
+        /* ESTILOS REVELADOS (Modo Normal) */
+        .card.red .card-layer { background-color: var(--rojo); }
+        .card.blue .card-layer { background-color: var(--azul); }
+        .card.civil .card-layer { background-color: var(--beige); }
+        .card.assassin .card-layer { background-color: var(--negro); }
+
+        /* MODO ESPÍA MEJORADO */
+        .spy-active .card.civil { background-color: transparent; border: 2px dashed rgba(128,128,128,0.2); }
+        .spy-active .card.red { background-color: rgba(239, 68, 68, 0.15); border: 3px solid var(--rojo); }
+        .spy-active .card.blue { background-color: rgba(59, 130, 246, 0.15); border: 3px solid var(--azul); }
+        .spy-active .card.assassin { background-color: rgba(0,0,0,0.7); border: 3px solid var(--negro); }
+        .spy-active .card:not(.revealed) img { opacity: 0.85; mix-blend-mode: normal; }
+        .spy-active .card.revealed img { opacity: 1; }
+
+        /* REVISIÓN DE JUEGO (Post-Partida) */
+        #grid.game-over .card-layer { opacity: 0.4; } /* Filtro general */
+        #grid.game-over .card.assassin .card-layer { opacity: 0.6; }
+        #grid.game-over .card.civil .card-layer { background-color: var(--beige); opacity: 0.4; }
+        #grid.game-over .card.red .card-layer { background-color: var(--rojo); }
+        #grid.game-over .card.blue .card-layer { background-color: var(--azul); }
+
+        /* Controles Inferiores */
+        #bottom-controls { 
+            width: 100%; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; 
+            background: var(--glass-bg); border-top: 1px solid var(--glass-border);
+            padding-bottom: calc(15px + env(safe-area-inset-bottom));
+        }
+        
+        .spy-switch { 
+            display: inline-flex; align-items: center; padding: 10px 18px; border-radius: 50px; 
+            background: rgba(0,0,0,0.05); color: var(--text-main); font-weight: 700; font-size: 0.9rem;
+            transition: all 0.3s; border: 2px solid transparent; cursor: pointer;
+        }
+        .spy-switch.active { background: var(--negro); color: white; border-color: var(--rojo); box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+
+        /* MODALES */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 2000; animation: fadeIn 0.2s; }
+        .settings-content { padding: 30px; width: 90%; max-width: 400px; transform: scale(0.95); animation: popIn 0.3s forwards; max-height: 85vh; overflow-y: auto; }
+        
+        .setting-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid rgba(0,0,0,0.05); }
+        .setting-label { font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        
+        .lang-group, .radio-group { display: flex; background: rgba(0,0,0,0.05); border-radius: 10px; padding: 4px; gap: 2px; }
+        .option-btn { border: none; background: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: 600; color: var(--text-sec); transition: all 0.2s; font-size: 0.9rem; }
+        .option-btn.active { background: var(--glass-bg); color: var(--text-main); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+
+        .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 22px; width: 22px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--btn-grad-end); }
+        input:checked + .slider:before { transform: translateX(22px); }
+
+        /* TELÓN DE SEGURIDAD */
+        #curtain-screen { 
+            position: absolute; top:0; left:0; width:100%; height:100%; 
+            background: var(--negro); z-index: 100; display: none;
+            flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; padding: 20px; animation: fadeIn 0.3s;
+        }
+
+        /* BRANDING */
+        .franma-footer {
+            position: absolute; bottom: 20px; width: 100%; text-align: center;
+            font-size: 0.75rem; color: var(--text-sec); opacity: 0.5; font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .main-title {
+            font-size: 2.8rem; margin: 0; font-weight: 800; letter-spacing: -1px;
+            background: linear-gradient(45deg, var(--rojo), var(--azul));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            display: inline-block;
+            animation: pulseTitle 3s infinite ease-in-out;
+        }
+
+        .typing-effect {
+            overflow: hidden; white-space: nowrap; border-right: 3px solid var(--azul);
+            animation: typing 2s steps(20, end), blink-caret .75s step-end infinite;
+            display: inline-block; max-width: 100%;
+        }
+
+        @keyframes floatUp { 0% { transform: translateY(110vh) rotate(0deg); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes popIn { to { transform: scale(1); } }
+        @keyframes dealCard { from { transform: scale(0.5) translateY(50px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+        @keyframes pulseTitle { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(0.98); opacity: 0.9; } }
+        @keyframes typing { from { width: 0 } to { width: 100% } }
+        @keyframes blink-caret { from, to { border-color: transparent } 50% { border-color: var(--azul); } }
+
+    </style>
+</head>
+<body>
+    <div id="particles-container"></div>
+
+    <div id="main-container">
+        
+        <div id="screen-start" class="screen active">
+            <button class="btn-icon" style="position: absolute; top:20px; right:20px;" onclick="toggleSettings()">⚙️</button>
+            
+            <div style="text-align: center; margin-bottom: 40px;">
+                <div class="typing-effect">
+                    <h1 class="main-title" style="font-size: 2.2rem;">MENSAJE ENCRIPTADO</h1>
+                </div>
+                <div style="height: 4px; width: 60px; background: var(--text-sec); margin: 15px auto; border-radius: 2px;"></div>
+                <p style="letter-spacing: 3px; font-size: 0.75rem; font-weight: 600; opacity: 0.7; font-family: var(--font-tech);">ACCESO SOLO AUTORIZADOS</p>
+            </div>
+            
+            <button id="btn-single" class="btn-main" onclick="startSinglePlayer()">1 CELULAR</button>
+            <button id="btn-multi" class="btn-main" style="background: linear-gradient(45deg, #4b5563, #374151);" onclick="navTo('screen-mode')">2 CELULARES</button>
+            
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button id="btn-manual" class="btn-icon" style="font-size: 0.8rem; font-weight: 600; width: 140px;" onclick="document.getElementById('inst-modal').style.display='flex'">📖 MANUAL</button>
+                <button id="btn-rules" class="btn-icon" style="font-size: 0.8rem; font-weight: 600; width: 140px;" onclick="document.getElementById('rules-modal').style.display='flex'">📜 REGLAMENTO</button>
+            </div>
+
+            <div class="franma-footer">Developed by FranMa Games</div>
+        </div>
+
+        <div id="screen-mode" class="screen">
+            <div class="glass-panel" style="padding: 30px; text-align: center; width: 90%; max-width: 400px;">
+                <h2 id="lbl-sync" style="margin:0 0 10px 0;">Sincronización</h2>
+                <p id="lbl-sync-desc" style="font-size: 0.85rem; color: var(--text-sec); margin-bottom: 15px;">
+                    Introduce el mismo código en ambos dispositivos.
+                </p>
+                <input type="number" id="mission-code" class="mission-input" placeholder="0000" oninput="if(this.value.length>4) this.value=this.value.slice(0,4);">
+                <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
+                    <button class="btn-icon" onclick="generateRandomCode()">🎲</button>
+                </div>
+                <hr style="border:0; border-top:1px solid rgba(0,0,0,0.1); margin: 20px 0;">
+                <p id="lbl-role-sel" style="font-size: 0.85rem; font-weight: bold; margin-bottom: 10px;">SELECCIONA TU ROL:</p>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <button id="btn-spy-role" class="btn-main" style="width:100%; font-size: 1rem; background: var(--negro);" onclick="prepareMultiplayer('spy')">🕵️‍♂️ SOY ESPÍA</button>
+                    <button id="btn-agent-role" class="btn-main" style="width:100%; font-size: 1rem;" onclick="prepareMultiplayer('agent')">🕵️‍♀️ SOY AGENTE</button>
+                </div>
+            </div>
+            <button id="btn-back" class="btn-icon" style="margin-top:20px;" onclick="navTo('screen-start')">Volver</button>
+        </div>
+
+        <div id="screen-game" class="screen" style="padding:0;">
+            <div id="timer-container"><div id="timer-bar"></div></div>
+            <button id="start-timer-btn" onclick="triggerTimer()">▶ INICIAR TIEMPO</button>
+            
+            <div id="curtain-screen">
+                <div style="font-size: 4rem; margin-bottom: 20px;">🔒</div>
+                <h2 style="color: white; margin-bottom: 10px;">TOP SECRET</h2>
+                <p id="curtain-msg" style="color: var(--text-sec); margin-bottom: 30px;">Pásale el dispositivo al otro equipo.</p>
+                <button class="btn-main" onclick="hideCurtain()">ESTOY LISTO</button>
+            </div>
+
+            <div id="game-header">
+                <button class="btn-icon" style="position: absolute; left: 15px; top: 15px; padding: 8px; font-size: 1.2rem;" onclick="confirmExit()">🏠</button>
+                <div id="turn-banner" class="bg-rojo">TURNO: ROJO</div>
+                <div id="score-board">
+                    <div class="score-pill bg-rojo">R: <span id="score-red">6</span></div>
+                    <div class="score-pill bg-azul">A: <span id="score-blue">6</span></div>
+                </div>
+            </div>
+
+            <div id="board-area">
+                <div id="grid"></div>
+            </div>
+
+            <div id="bottom-controls">
+                <div class="spy-switch" id="btn-spy" onclick="toggleSpy()">
+                    <span style="font-size:1.2rem; margin-right:8px;">🕵️‍♂️</span> <span id="lbl-spy-btn">ESPIA</span>
+                </div>
+                <div style="display:flex; gap:10px; margin-left: auto;">
+                    <button id="btn-pass" class="btn-icon" onclick="passTurn()" style="font-weight: 700; font-size: 0.9rem;">PASAR</button>
+                    <button class="btn-icon" onclick="if(confirm('¿Reiniciar tablero?')) startGame()">🔄</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="settings-modal" class="modal-overlay" onclick="if(event.target===this) toggleSettings()">
+        <div class="glass-panel settings-content">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h2 id="lbl-settings" style="margin:0;">Ajustes</h2>
+                <button class="btn-icon" style="padding:5px 10px;" onclick="toggleSettings()">✕</button>
+            </div>
+            
+            <div class="setting-row">
+                <span class="setting-label">🎮 Dificultad</span>
+                <div class="lang-group">
+                    <button class="option-btn" onclick="setDiff('easy', this)">😊</button>
+                    <button class="option-btn active" onclick="setDiff('normal', this)">😐</button>
+                    <button class="option-btn" onclick="setDiff('hard', this)">😈</button>
+                </div>
+            </div>
+
+            <div class="setting-row">
+                <span class="setting-label">⏱️ Tiempo</span>
+                <div class="lang-group">
+                    <button class="option-btn" onclick="setTime(30, this)">30</button>
+                    <button class="option-btn active" onclick="setTime(60, this)">60</button>
+                    <button class="option-btn" onclick="setTime(120, this)">120</button>
+                    <button class="option-btn" onclick="setTime(9999, this)">∞</button>
+                </div>
+            </div>
+
+            <hr style="border:0; border-top:1px solid rgba(0,0,0,0.1); margin:15px 0;">
+
+            <div class="setting-row">
+                <span id="lbl-lang" class="setting-label">🌐 Idioma</span>
+                <div class="lang-group">
+                    <button class="option-btn active" onclick="setLang('es', this)">ES</button>
+                    <button class="option-btn" onclick="setLang('en', this)">EN</button>
+                    <button class="option-btn" onclick="setLang('pt', this)">PT</button>
+                </div>
+            </div>
+
+            <div class="setting-row">
+                <span id="lbl-theme" class="setting-label">☀️ Modo Claro</span>
+                <label class="switch"><input type="checkbox" id="check-theme" onchange="toggleTheme()"><span class="slider"></span></label>
+            </div>
+            <div class="setting-row">
+                <span id="lbl-sound" class="setting-label">🔊 Sonido</span>
+                <label class="switch"><input type="checkbox" id="check-sound" checked onchange="CFG.sound=this.checked"><span class="slider"></span></label>
+            </div>
+            <div class="setting-row">
+                <span id="lbl-vibe" class="setting-label">📳 Vibración</span>
+                <label class="switch"><input type="checkbox" id="check-vibe" checked onchange="CFG.vibe=this.checked"><span class="slider"></span></label>
+            </div>
+            <p style="font-size:0.8rem; color:var(--text-sec); text-align:center; margin-top:20px;">V.17.0</p>
+        </div>
+    </div>
+
+    <div id="inst-modal" class="modal-overlay" onclick="if(event.target===this) this.style.display='none'">
+        <div class="glass-panel settings-content">
+            <h2 id="lbl-manual-title" style="color: var(--rojo); margin-top: 0;">Manual de Agente</h2>
+            <div id="manual-body" style="font-size:0.9rem; line-height:1.6;"></div>
+            <button id="btn-manual-ok" class="btn-main" style="margin-top:20px; width:100%;" onclick="document.getElementById('inst-modal').style.display='none'">ENTENDIDO</button>
+        </div>
+    </div>
+
+    <div id="rules-modal" class="modal-overlay" onclick="if(event.target===this) this.style.display='none'">
+        <div class="glass-panel settings-content" style="max-width: 500px;">
+            <h2 id="lbl-rules-title" style="color: var(--azul); margin-top: 0;">Reglamento Completo</h2>
+            <div id="rules-body" style="font-size:0.85rem; line-height:1.6; text-align: left;">
+                </div>
+            <button class="btn-main" style="margin-top:20px; width:100%;" onclick="document.getElementById('rules-modal').style.display='none'">CERRAR</button>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIGURACIÓN ---
+        const CFG = { 
+            lang: 'es', 
+            sound: true, 
+            vibe: true, 
+            timerDuration: 60, 
+            totalImages: 56,
+            difficulty: 'normal' // easy, normal, hard
+        };
+
+        const LANG = {
+            es: { 
+                single:"1 CELULAR", multi:"2 CELULARES", manual:"MANUAL", rules:"REGLAMENTO",
+                sync:"Sincronización", syncDesc:"Introduce el mismo código en ambos dispositivos.", 
+                selRole:"SELECCIONA TU ROL:", roleSpy:"🕵️‍♂️ SOY ESPÍA", roleAgent:"🕵️‍♀️ SOY AGENTE", 
+                back:"Volver", settings:"Ajustes", theme:"☀️ Modo Claro", sound:"🔊 Sonido", vibe:"📳 Vibración",
+                turn:"TURNO", spyBtn:"ESPIA", pass:"PASAR", startTimer:"▶ INICIAR TIEMPO",
+                won:"VICTORIA", timeOut:"¡TIEMPO AGOTADO!", innocent:"Inocente.", enemy:"¡Agente Enemigo!", assassin:"☠️ ASESINO CONTACTADO. JUEGO TERMINADO.",
+                curtainMsg: "Pásale el dispositivo al otro equipo.", curtainBtn: "ESTOY LISTO",
+                manualBody: `<p><strong>OBJETIVO:</strong> Tu equipo debe contactar a todos sus agentes antes que el enemigo.</p><hr style="border:0; border-top:1px solid rgba(0,0,0,0.1);"><p><strong>ROLES:</strong><br>👁️ <strong>Líderes:</strong> Dan pistas (1 Palabra + 1 Número).<br>🕵️ <strong>Agentes:</strong> Tocan las cartas.</p><hr style="border:0; border-top:1px solid rgba(0,0,0,0.1);"><p><strong>COLORES:</strong><br>🔴🔵 <strong>Agentes:</strong> Punto.<br>⚪ <strong>Civil:</strong> Fin de turno.<br>⚫ <strong>ASESINO:</strong> PIERDES.</p>`,
+                rulesBody: `
+                    <p><strong>1. OBJETIVO DEL JUEGO</strong><br>Dos equipos (Rojo y Azul) compiten por ser los primeros en contactar a todos sus agentes secretos. Los líderes de cada equipo conocen la identidad de las 20 cartas, pero los agentes solo ven imágenes.</p>
+                    <p><strong>2. PISTAS VÁLIDAS</strong><br>El líder solo puede decir <strong>UNA palabra</strong> y <strong>UN número</strong> (ej: "Océano, 2").<br>• La palabra debe relacionar las imágenes.<br>• El número indica cuántas cartas están relacionadas.</p>
+                    <p><strong>3. LO PROHIBIDO 🚫</strong><br>• No se puede decir parte de la palabra que está en la imagen (si hay un perro, no digas "perro").<br>• No valen rimas ni traducciones directas.<br>• No se pueden hacer gestos ni caras.</p>
+                    <p><strong>4. DESARROLLO DEL TURNO</strong><br>Los agentes tocan las cartas una por una. Si aciertan, pueden seguir adivinando. Si fallan (Civil o Enemigo), el turno termina inmediatamente.</p>
+                    <p><strong>5. FIN DE JUEGO</strong><br>Gana quien encuentra todos sus agentes primero. Si alguien toca al <strong>ASESINO</strong>, ese equipo pierde automáticamente.</p>
+                `,
+                ok:"ENTENDIDO"
+            },
+            en: { 
+                single:"1 DEVICE", multi:"2 DEVICES", manual:"MANUAL", rules:"RULES",
+                sync:"Synchronization", syncDesc:"Enter the same code on both devices.", 
+                selRole:"SELECT YOUR ROLE:", roleSpy:"🕵️‍♂️ I'M THE SPY", roleAgent:"🕵️‍♀️ I'M AN AGENT", 
+                back:"Back", settings:"Settings", theme:"☀️ Light Mode", sound:"🔊 Sound", vibe:"📳 Vibration",
+                turn:"TURN", spyBtn:"SPY", pass:"PASS", startTimer:"▶ START TIMER",
+                won:"VICTORY", timeOut:"TIME OUT!", innocent:"Innocent.", enemy:"Enemy Agent!", assassin:"☠️ ASSASSIN CONTACTED. GAME OVER.",
+                curtainMsg: "Pass the device to the other team.", curtainBtn: "I'M READY",
+                manualBody: `<p><strong>OBJECTIVE:</strong> Contact all your agents before the enemy.</p><hr style="border:0; border-top:1px solid rgba(0,0,0,0.1);"><p><strong>ROLES:</strong><br>👁️ <strong>Leaders:</strong> Give clues (1 Word + 1 Number).<br>🕵️ <strong>Agents:</strong> Tap cards.</p><hr style="border:0; border-top:1px solid rgba(0,0,0,0.1);"><p><strong>COLORS:</strong><br>🔴🔵 <strong>Agents:</strong> Point.<br>⚪ <strong>Civilian:</strong> End turn.<br>⚫ <strong>ASSASSIN:</strong> LOSE GAME.</p>`,
+                rulesBody: `<p><strong>1. OBJECTIVE</strong><br>Two teams (Red/Blue) race to contact all agents. Leaders know the colors, agents only see images.</p><p><strong>2. CLUES</strong><br>Leader says <strong>ONE word</strong> and <strong>ONE number</strong> (e.g. "Ocean, 2").</p><p><strong>3. FORBIDDEN 🚫</strong><br>• Do not say words displayed in the image.<br>• No rhyming or translating.<br>• No gestures.</p><p><strong>4. GAMEPLAY</strong><br>Agents tap cards. Correct guess = continue. Wrong guess (Civil/Enemy) = Turn ends.</p><p><strong>5. GAME OVER</strong><br>Find all agents to win. Touch the <strong>ASSASSIN</strong> and you lose instantly.</p>`,
+                ok:"UNDERSTOOD"
+            },
+            pt: { 
+                single:"1 CELULAR", multi:"2 CELULARES", manual:"MANUAL", rules:"REGRAS",
+                sync:"Sincronização", syncDesc:"Digite o mesmo código em ambos os dispositivos.", 
+                selRole:"SELECIONE SEU PAPEL:", roleSpy:"🕵️‍♂️ SOU ESPIÃO", roleAgent:"🕵️‍♀️ SOU AGENTE", 
+                back:"Voltar", settings:"Ajustes", theme:"☀️ Modo Claro", sound:"🔊 Som", vibe:"📳 Vibração",
+                turn:"VEZ", spyBtn:"ESPIÃO", pass:"PASSAR", startTimer:"▶ INICIAR TEMPO",
+                won:"VITÓRIA", timeOut:"TEMPO ESGOTADO!", innocent:"Inocente.", enemy:"Agente Inimigo!", assassin:"☠️ ASSASSINO CONTATADO. FIM DE JOGO.",
+                curtainMsg: "Passe o dispositivo para a outra equipe.", curtainBtn: "ESTOU PRONTO",
+                manualBody: `<p><strong>OBJETIVO:</strong> Contatar seus agentes antes do inimigo.</p><hr style="border:0; border-top:1px solid rgba(0,0,0,0.1);"><p><strong>PAPÉIS:</strong><br>👁️ <strong>Líderes:</strong> Dão dicas (1 Palavra + 1 Número).<br>🕵️ <strong>Agentes:</strong> Tocam nas cartas.</p><hr style="border:0; border-top:1px solid rgba(0,0,0,0.1);"><p><strong>CORES:</strong><br>🔴🔵 <strong>Agentes:</strong> Ponto.<br>⚪ <strong>Civil:</strong> Fim da vez.<br>⚫ <strong>ASSASSINO:</strong> PERDE O JOGO.</p>`,
+                rulesBody: `<p><strong>1. OBJETIVO</strong><br>Duas equipes (Vermelho/Azul) correm para contatar agentes. Líderes veem cores, agentes veem imagens.</p><p><strong>2. DICAS</strong><br>Líder diz <strong>UMA palavra</strong> e <strong>UM número</strong> (ex: "Oceano, 2").</p><p><strong>3. PROIBIDO 🚫</strong><br>• Não diga palavras que estão na imagem.<br>• Sem rimas ou traduções.<br>• Sem gestos.</p><p><strong>4. JOGADA</strong><br>Agentes tocam cartas. Acerto = continua. Erro (Civil/Inimigo) = Fim da vez.</p><p><strong>5. FIM DE JOGO</strong><br>Encontre todos os agentes para vencer. Tocar no <strong>ASSASSINO</strong> é derrota automática.</p>`,
+                ok:"ENTENDIDO"
+            }
+        };
+
+        let GAME = { 
+            turn: 'red', 
+            active: false, 
+            scores: {red:6, blue:6}, 
+            cards: [], 
+            spyMode: false, 
+            timerInterval: null, 
+            seed: 1234,
+            lockedRole: null 
+        };
+        
+        // --- AUDIO ENGINE ---
+        let audioCtx = null;
+        function playSound(type) {
+            if(!CFG.sound) return;
+            if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+            
+            if(type === 'pop') {
+                osc.type = 'sine'; osc.frequency.setValueAtTime(300, now); osc.frequency.exponentialRampToValueAtTime(500, now + 0.1);
+                gain.gain.setValueAtTime(0.05, now); gain.gain.linearRampToValueAtTime(0, now + 0.1);
+                osc.start(now); osc.stop(now + 0.1);
+            } else if (type === 'success') {
+                osc.type = 'sine'; osc.frequency.setValueAtTime(500, now); osc.frequency.linearRampToValueAtTime(800, now + 0.1);
+                gain.gain.setValueAtTime(0.05, now); gain.gain.linearRampToValueAtTime(0, now + 0.4);
+                osc.start(now); osc.stop(now + 0.4);
+            } else if (type === 'error') {
+                osc.type = 'triangle'; osc.frequency.setValueAtTime(150, now); osc.frequency.linearRampToValueAtTime(100, now + 0.2);
+                gain.gain.setValueAtTime(0.05, now); gain.gain.linearRampToValueAtTime(0, now + 0.3);
+                osc.start(now); osc.stop(now + 0.3);
+            }
+        }
+
+        // --- LÓGICA DE JUEGO ---
+        function seededRandom() {
+            GAME.seed = (GAME.seed * 9301 + 49297) % 233280;
+            return GAME.seed / 233280;
+        }
+
+        function generateRandomCode() {
+            document.getElementById('mission-code').value = Math.floor(Math.random() * 9000) + 1000;
+        }
+
+        function startSinglePlayer() {
+            GAME.seed = Math.floor(Math.random() * 9999);
+            GAME.lockedRole = null; 
+            startGame();
+        }
+
+        function prepareMultiplayer(role) {
+            let input = document.getElementById('mission-code').value;
+            if(!input) input = "1234";
+            GAME.seed = parseInt(input);
+            GAME.lockedRole = role; 
+            startGame();
+        }
+
+        function startGame() {
+            navTo('screen-game');
+            GAME.active = true; GAME.turn = 'red'; 
+            
+            // ATMÓSFERA INICIAL
+            document.body.className = 'turn-red';
+
+            // Configurar Dificultad (Totales)
+            let reds=6, blues=6, blacks=1, civils=7; // Normal por defecto
+            if(CFG.difficulty === 'easy') { blacks=0; civils=8; }
+            if(CFG.difficulty === 'hard') { blacks=2; civils=6; }
+            
+            GAME.scores = {red:reds, blue:blues};
+            updateHUD();
+
+            // Configurar Roles
+            const spyBtn = document.getElementById('btn-spy');
+            const grid = document.getElementById('grid');
+            grid.classList.remove('game-over'); // Reset post-game
+
+            if (GAME.lockedRole === 'spy') {
+                GAME.spyMode = true; spyBtn.style.display = 'none'; grid.classList.add('spy-active');
+            } else if (GAME.lockedRole === 'agent') {
+                GAME.spyMode = false; spyBtn.style.display = 'none'; grid.classList.remove('spy-active');
+            } else {
+                GAME.spyMode = false; spyBtn.style.display = 'inline-flex'; spyBtn.classList.remove('active'); grid.classList.remove('spy-active');
+            }
+
+            if (GAME.lockedRole === 'spy') {
+                document.getElementById('timer-container').style.display = 'none';
+                document.getElementById('start-timer-btn').style.display = 'none';
+            } else {
+                resetTimerState(); 
+            }
+
+            let tempSeed = GAME.seed; 
+            const getRand = () => { tempSeed = (tempSeed * 9301 + 49297) % 233280; return tempSeed / 233280; };
+
+            let available = Array.from({length: CFG.totalImages}, (_, i) => i + 1);
+            let selectedImgs = [];
+            for(let i=0; i<20; i++) {
+                let r = Math.floor(getRand() * available.length);
+                selectedImgs.push(available.splice(r, 1)[0]);
+            }
+
+            let colors = [...Array(reds).fill('red'), ...Array(blues).fill('blue'), ...Array(civils).fill('civil'), ...Array(blacks).fill('assassin')];
+            for (let i = colors.length - 1; i > 0; i--) {
+                const j = Math.floor(getRand() * (i + 1));
+                [colors[i], colors[j]] = [colors[j], colors[i]];
+            }
+
+            const gridContainer = document.getElementById('grid'); gridContainer.innerHTML = ''; GAME.cards = [];
+            
+            selectedImgs.forEach((imgNum, i) => {
+                const card = document.createElement('div'); card.className = 'card ' + colors[i];
+                card.innerHTML = `
+                    <img src="assets/${imgNum}.jpg" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                    <div style="display:none; width:100%; height:100%; align-items:center; justify-content:center; font-size:2rem; font-weight:800; color:var(--text-sec); background:rgba(0,0,0,0.05);">${imgNum}</div>
+                    <div class="card-layer"></div>
+                `;
+                card.onclick = () => cardClick(i);
+                gridContainer.appendChild(card);
+                GAME.cards.push({ id:i, el:card, color:colors[i], revealed:false });
+                setTimeout(() => { card.classList.add('dealt'); playSound('pop'); }, i * 50);
+            });
+        }
+
+        function cardClick(i) {
+            if(!GAME.active || (GAME.lockedRole === 'spy') || (GAME.lockedRole === null && GAME.spyMode)) return;
+            const c = GAME.cards[i]; if(c.revealed) return;
+
+            c.revealed = true;
+            c.el.classList.add('revealed');
+            
+            if(c.color === 'assassin') {
+                playSound('error'); if(navigator.vibrate) navigator.vibrate(1000);
+                endGame(LANG[CFG.lang].assassin);
+            } else if (c.color === GAME.turn) {
+                playSound('success'); if(navigator.vibrate) navigator.vibrate(50);
+                GAME.scores[GAME.turn]--; updateHUD();
+                if(GAME.scores[GAME.turn] === 0) {
+                    endGame("🏆 " + LANG[CFG.lang].won + " " + GAME.turn.toUpperCase() + "!");
+                }
+            } else {
+                playSound('error'); if(navigator.vibrate) navigator.vibrate(200);
+                alert(c.color === 'civil' ? LANG[CFG.lang].innocent : LANG[CFG.lang].enemy);
+                if(c.color !== 'civil') {
+                    const enemy = GAME.turn === 'red' ? 'blue' : 'red';
+                    GAME.scores[enemy]--; updateHUD();
+                    if(GAME.scores[enemy] === 0) endGame("🏆 " + LANG[CFG.lang].won + " " + enemy.toUpperCase() + "!");
+                }
+                if(GAME.active) passTurn();
+            }
+        }
+
+        function endGame(msg) {
+            GAME.active = false;
+            // Revelar tablero con estilo
+            document.getElementById('grid').classList.add('game-over');
+            // Si estaba en modo agente, permitir ver
+            if(GAME.lockedRole === 'agent') {
+                document.getElementById('grid').classList.add('spy-active'); // Force spy view to see what happened
+            }
+            setTimeout(() => alert(msg), 300);
+        }
+
+        function passTurn() {
+            // CAMBIO: TELÓN DE SEGURIDAD EN MODO 1 CELULAR
+            if(GAME.lockedRole === null) {
+                showCurtain();
+            } else {
+                actualPassTurn();
+            }
+        }
+
+        function showCurtain() {
+            // Apagar espía si estaba prendido
+            if(GAME.spyMode) toggleSpy();
+            document.getElementById('curtain-screen').style.display = 'flex';
+            document.getElementById('curtain-msg').innerText = LANG[CFG.lang].curtainMsg;
+        }
+
+        function hideCurtain() {
+            document.getElementById('curtain-screen').style.display = 'none';
+            actualPassTurn();
+        }
+
+        function actualPassTurn() {
+            GAME.turn = GAME.turn === 'red' ? 'blue' : 'red';
+            updateHUD();
+            // Atmósfera
+            document.body.className = GAME.turn === 'red' ? 'turn-red' : 'turn-blue';
+            
+            if(GAME.lockedRole !== 'spy') resetTimerState();
+            playSound('pop');
+        }
+
+        function resetTimerState() {
+            clearInterval(GAME.timerInterval);
+            document.getElementById('timer-container').style.display = 'none';
+            document.getElementById('timer-bar').style.width = '100%';
+            if(CFG.timerDuration < 9000) document.getElementById('start-timer-btn').style.display = 'block';
+        }
+
+        function triggerTimer() {
+            document.getElementById('start-timer-btn').style.display = 'none';
+            document.getElementById('timer-container').style.display = 'block';
+            startTimerLogic();
+        }
+
+        function startTimerLogic() {
+            if(CFG.timerDuration > 9000) return; // Infinito
+
+            const bar = document.getElementById('timer-bar');
+            bar.style.backgroundColor = '#22c55e';
+            let timeLeft = CFG.timerDuration;
+            
+            GAME.timerInterval = setInterval(() => {
+                timeLeft--;
+                bar.style.width = (timeLeft / CFG.timerDuration * 100) + '%';
+                if(timeLeft < 10) bar.style.backgroundColor = '#ef4444';
+                else if(timeLeft < 30) bar.style.backgroundColor = '#f59e0b';
+                if(timeLeft <= 0) {
+                    clearInterval(GAME.timerInterval);
+                    playSound('error');
+                    alert(LANG[CFG.lang].timeOut);
+                    passTurn();
+                }
+            }, 1000);
+        }
+
+        // SETTINGS HANDLERS
+        function setLang(l, btn) {
+            CFG.lang = l;
+            setActiveBtn(btn);
+            updateTexts();
+        }
+        function setDiff(d, btn) {
+            CFG.difficulty = d;
+            setActiveBtn(btn);
+        }
+        function setTime(t, btn) {
+            CFG.timerDuration = t;
+            setActiveBtn(btn);
+        }
+        function setActiveBtn(btn) {
+            btn.parentNode.querySelectorAll('.option-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        function updateTexts() {
+            const t = LANG[CFG.lang];
+            document.getElementById('btn-single').innerText = t.single;
+            document.getElementById('btn-multi').innerText = t.multi;
+            document.getElementById('btn-manual').innerText = "📖 " + t.manual;
+            document.getElementById('btn-rules').innerText = "📜 " + t.rules;
+            document.getElementById('lbl-sync').innerText = t.sync;
+            document.getElementById('lbl-sync-desc').innerText = t.syncDesc;
+            document.getElementById('lbl-role-sel').innerText = t.selRole;
+            document.getElementById('btn-spy-role').innerText = t.roleSpy;
+            document.getElementById('btn-agent-role').innerText = t.roleAgent;
+            document.getElementById('btn-back').innerText = t.back;
+            document.getElementById('lbl-settings').innerText = t.settings;
+            document.getElementById('lbl-theme').innerText = t.theme;
+            document.getElementById('lbl-sound').innerText = t.sound;
+            document.getElementById('lbl-vibe').innerText = t.vibe;
+            document.getElementById('lbl-spy-btn').innerText = t.spyBtn;
+            document.getElementById('btn-pass').innerText = t.pass;
+            document.getElementById('start-timer-btn').innerText = t.startTimer;
+            document.getElementById('lbl-manual-title').innerText = t.manual;
+            document.getElementById('manual-body').innerHTML = t.manualBody;
+            document.getElementById('btn-manual-ok').innerText = t.ok;
+            
+            document.getElementById('lbl-rules-title').innerText = t.rules;
+            document.getElementById('rules-body').innerHTML = t.rulesBody;
+            document.getElementById('curtain-msg').innerText = t.curtainMsg;
+            document.querySelector('#curtain-screen button').innerText = t.curtainBtn;
+
+            updateHUD();
+        }
+
+        function updateHUD() {
+            const t = LANG[CFG.lang];
+            document.getElementById('turn-banner').innerText = t.turn + ": " + (GAME.turn === 'red' ? "ROJO" : "AZUL");
+            document.getElementById('turn-banner').className = GAME.turn === 'red' ? 'bg-rojo' : 'bg-azul';
+            document.getElementById('score-red').innerText = GAME.scores.red;
+            document.getElementById('score-blue').innerText = GAME.scores.blue;
+        }
+
+        function toggleSpy() {
+            if (GAME.lockedRole) return; 
+            GAME.spyMode = !GAME.spyMode;
+            document.getElementById('btn-spy').classList.toggle('active', GAME.spyMode);
+            document.getElementById('grid').classList.toggle('spy-active', GAME.spyMode);
+        }
+
+        function toggleSettings() {
+            const m = document.getElementById('settings-modal');
+            m.style.display = (m.style.display === 'flex') ? 'none' : 'flex';
+        }
+
+        function toggleTheme() {
+            document.documentElement.setAttribute('data-theme', document.getElementById('check-theme').checked ? 'light' : 'dark');
+        }
+
+        function navTo(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            if(id === 'screen-start') document.body.className = ''; // Reset background
+        }
+
+        function confirmExit() {
+            if(confirm("¿Salir al menú principal?")) navTo('screen-start');
+        }
+
+        const pCont = document.getElementById('particles-container');
+        const icons = ['🕵️', '📁', '💣', '🗝️', '🔎'];
+        for(let i=0; i<15; i++) {
+            let p = document.createElement('div'); p.className = 'particle'; p.innerText = icons[Math.floor(Math.random()*icons.length)];
+            p.style.left = Math.random()*100 + '%'; p.style.animationDelay = Math.random()*15 + 's'; pCont.appendChild(p);
+        }
+        
+        // Init texts
+        updateTexts();
+    </script>
+</body>
+</html>
