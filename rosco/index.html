@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <link rel="manifest" href="manifest.json">
+    
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#131518">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
+    <title>Pasapalabra Final</title>
+    <style>
+        /* --- ESTILOS VISUALES --- */
+        :root {
+            --bg: #131518; --blue: #00d2d3; --purple: #6c5ce7;
+            --pending-bg: #2d3436; --pending-border: #636e72;
+            --active-bg: #feca57; --active-glow: #ff9f43;
+            --correct-bg: #10ac84; --correct-glow: #55efc4;
+            --wrong-bg: #ff4757; --wrong-glow: #ff6b6b;
+        }
+        
+        body { margin: 0; height: 100vh; overflow: hidden; background: radial-gradient(circle at center, #2d3436, #000); color: white; font-family: 'Roboto', sans-serif; display: flex; flex-direction: column; user-select: none; -webkit-tap-highlight-color: transparent; }
+        
+        /* PANTALLAS */
+        .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; position: absolute; top:0; left:0; background: rgba(19,21,24,0.98); z-index: 10; padding: 20px; box-sizing: border-box; }
+        .active { display: flex !important; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* UI GENERICA */
+        h1 { font-family: 'Orbitron'; font-size: 3rem; margin: 0 0 10px 0; color: var(--blue); text-shadow: 0 0 15px var(--blue); text-align: center; line-height: 1; }
+        h2 { font-weight: 300; text-transform: uppercase; color: #dfe6e9; margin-bottom: 20px; text-align: center; font-size: 1.2rem; }
+
+        .btn-big { background: linear-gradient(135deg, var(--blue), var(--purple)); border: none; color: white; padding: 15px 40px; border-radius: 50px; font-size: 1.3rem; font-weight: bold; margin: 10px 0; cursor: pointer; width: 100%; max-width: 320px; font-family: 'Orbitron'; box-shadow: 0 0 10px rgba(108, 92, 231, 0.4); }
+        .btn-big:active { transform: scale(0.96); }
+        
+        .btn-opt { background: transparent; border: 2px solid #636e72; color: #b2bec3; padding: 12px; border-radius: 12px; font-size: 1rem; margin: 5px; cursor: pointer; flex: 1; font-weight: bold; transition: 0.2s; }
+        .btn-opt.selected { border-color: var(--blue); color: white; background: rgba(0, 210, 211, 0.1); }
+
+        .opt-row { display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 350px; margin-bottom: 10px; }
+        .opt-group { display: flex; gap: 5px; flex: 1; }
+        .btn-info { width: 30px; height: 30px; border-radius: 50%; background: #2d3436; border: 1px solid #aaa; color: #aaa; font-weight: bold; font-family: serif; font-style: italic; margin-left: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+        /* MODAL INFO */
+        #modal-info { background: rgba(0,0,0,0.95); z-index: 100; padding: 30px; }
+        .info-box { border: 2px solid var(--blue); padding: 20px; border-radius: 15px; background: #222; text-align: center; }
+        .info-title { color: var(--blue); font-family: 'Orbitron'; font-size: 1.5rem; margin-bottom: 15px; border-bottom: 1px solid #444; padding-bottom: 10px; }
+        .info-text { font-size: 1.1rem; line-height: 1.5; color: #ddd; }
+
+        /* ROSCO VISUAL */
+        #rosco-box { position: relative; width: 90vmin; height: 90vmin; margin-top: 10px; }
+        .letter { 
+            position: absolute; width: 7.5vmin; height: 7.5vmin; 
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+            font-weight: bold; font-size: 3.2vmin; font-family: 'Orbitron'; 
+            transition: 0.3s; box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+            background: var(--pending-bg); color: #fff; border: 2px solid var(--pending-border);
+        }
+        .letter.active { background: var(--active-bg) !important; color: #000 !important; border-color: #fff !important; transform: scale(1.5); z-index: 50; box-shadow: 0 0 25px var(--active-glow); animation: pulse 1s infinite; }
+        .letter.correct { background: var(--correct-bg) !important; border-color: var(--correct-glow) !important; color: white !important; box-shadow: 0 0 10px var(--correct-bg); }
+        .letter.wrong { background: var(--wrong-bg) !important; border-color: var(--wrong-glow) !important; color: white !important; box-shadow: 0 0 10px var(--wrong-bg); }
+
+        #center-info { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 75%; text-align: center; }
+        #timer { font-family: 'Orbitron'; font-size: 4rem; color: #fff; margin-bottom: 10px; text-shadow: 0 0 10px rgba(255,255,255,0.2); }
+        #definition { font-size: 1.1rem; line-height: 1.4; color: #dfe6e9; min-height: 90px; text-shadow: 1px 1px 2px black; }
+        
+        #controls-area { position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.85); padding: 20px; display: flex; justify-content: center; border-top: 1px solid #444; }
+        
+        #input-text { display: none; gap: 10px; width: 100%; max-width: 500px; }
+        input { flex: 1; padding: 15px; font-size: 1.2rem; border-radius: 12px; border: none; outline: none; font-weight: bold; }
+        .btn-game { border: none; padding: 0 20px; border-radius: 10px; font-weight: bold; color:white; font-family:'Orbitron'; cursor: pointer; }
+        .bg-ok { background: var(--correct-bg); } .bg-pass { background: var(--active-bg); color:black; } .bg-bad { background: var(--wrong-bg); }
+
+        #input-voice { display: none; flex-direction: column; align-items: center; gap: 10px; }
+        .mic-btn { width: 70px; height: 70px; border-radius: 50%; background: var(--wrong-bg); border: 3px solid #fff; display: flex; align-items: center; justify-content: center; font-size: 2rem; cursor: pointer; }
+        .mic-btn.listening { background: var(--correct-bg); transform: scale(1.1); box-shadow: 0 0 25px var(--correct-bg); }
+
+        #top-bar { position: absolute; top: 0; width: 100%; padding: 15px; text-align: center; background: rgba(0,0,0,0.6); font-family: 'Orbitron'; font-size: 1.2rem; z-index: 5; }
+        
+        #screen-turn { background: rgba(0,0,0,0.92); z-index: 100; }
+        .next-player-txt { font-family:'Orbitron'; font-size: 3rem; margin: 20px 0; color: var(--purple); }
+        .host-panel { width: 100%; max-width: 400px; background: #222; padding: 15px; border-radius: 10px; border: 1px solid #444; margin-bottom: 10px; text-align: center; }
+        .code-display { font-family: 'Orbitron'; font-size: 3rem; letter-spacing: 5px; color: var(--active-bg); border: 2px dashed var(--active-bg); padding: 10px; border-radius: 10px; margin: 10px 0; }
+
+        @keyframes pulse { 0% { transform: scale(1.5); } 50% { transform: scale(1.6); } 100% { transform: scale(1.5); } }
+
+    </style>
+</head>
+<body>
+
+    <div id="screen-home" class="screen active">
+        <h1>PASAPALABRA<br><span style="font-size:1.2rem; color:#fff; letter-spacing:3px;">MASTER SUITE</span></h1>
+        
+        <div style="width:100%; max-width:350px; margin-top:20px;">
+            <p style="color:#aaa; text-align:center; font-size:0.9rem;">ELIGE UNA EXPERIENCIA</p>
+            <div class="opt-row"><button class="btn-big" onclick="selectFlow('local')">📱 MODO LOCAL</button><div class="btn-info" onclick="showInfo('local')">i</div></div>
+            <div class="opt-row"><button class="btn-big" style="background: linear-gradient(135deg, #2d3436, #636e72);" onclick="selectFlow('tv')">📡 MODO TV</button><div class="btn-info" onclick="showInfo('tv')">i</div></div>
+        </div>
+        <p style="color:#666; font-size:0.8rem; margin-top:30px;">v8.0 - No Repeat Engine</p>
+    </div>
+
+    <div id="screen-setup-local" class="screen">
+        <h2>Configuración Local</h2>
+        <div class="opt-row"><div class="opt-group"><button class="btn-opt selected" onclick="setOpt('players', 1, this)">1 JUGADOR</button><button class="btn-opt" onclick="setOpt('players', 2, this)">2 JUGADORES</button></div><div class="btn-info" onclick="showInfo('players')">i</div></div>
+        <div class="opt-row"><div class="opt-group"><button class="btn-opt selected" onclick="setOpt('input', 'text', this)">⌨️ TEXTO</button><button class="btn-opt" onclick="setOpt('input', 'voice', this)">🎤 VOZ</button></div><div class="btn-info" onclick="showInfo('voice')">i</div></div>
+        <div class="opt-row"><div class="opt-group"><button class="btn-opt" onclick="setOpt('time', 100, this)">100s</button><button class="btn-opt selected" onclick="setOpt('time', 150, this)">150s</button><button class="btn-opt" onclick="setOpt('time', 200, this)">200s</button></div></div>
+        <div class="opt-row" style="justify-content: center;"><button class="btn-opt" id="btn-sound" onclick="toggleSound()" style="max-width:200px; border-color:var(--correct-bg); color:var(--correct-bg);">🔊 SONIDO: ON</button></div>
+        <button class="btn-big" onclick="initGame()">¡A JUGAR!</button>
+        <button class="btn-opt" style="border:none; margin-top:10px;" onclick="show('screen-home')">Volver</button>
+    </div>
+
+    <div id="screen-setup-tv" class="screen">
+        <h2>Modo TV Studio</h2>
+        <div class="opt-row"><button class="btn-big" onclick="initHost()">📺 SOY EL PRESENTADOR</button><div class="btn-info" onclick="showInfo('host')">i</div></div>
+        <div class="opt-row"><button class="btn-big" style="background: linear-gradient(135deg, #00b894, #00cec9);" onclick="show('screen-join')">🙋 SOY EL JUGADOR</button><div class="btn-info" onclick="showInfo('client')">i</div></div>
+        <button class="btn-opt" style="border:none; margin-top:20px;" onclick="show('screen-home')">Volver</button>
+    </div>
+
+    <div id="screen-host-lobby" class="screen">
+        <h2>Tu Sala</h2><div class="code-display" id="host-code">Cargando...</div>
+        <p style="color:#aaa;">Dile este código al jugador</p>
+        <div id="host-status" style="margin-top:20px; color:var(--blue); font-weight:bold;">Esperando conexión...</div>
+        <div id="conn-warning" style="margin-top:10px; color:#aaa; font-size:0.8rem; display:none;">Si tarda mucho, usen el mismo WiFi.</div>
+        <button class="btn-opt" style="margin-top:20px; border:none;" onclick="location.reload()">Cancelar</button>
+    </div>
+
+    <div id="screen-join" class="screen">
+        <h2>Ingresar Código</h2>
+        <input type="text" id="join-code" placeholder="ABCD" style="text-align:center; text-transform:uppercase; font-family:'Orbitron'; font-size:2rem; max-width:200px; margin-bottom:20px;">
+        <button class="btn-big" onclick="joinGame()">CONECTAR</button>
+        <div id="join-status" style="margin-top:10px; color:var(--wrong-bg);"></div>
+        <button class="btn-opt" style="border:none; margin-top:10px;" onclick="show('screen-setup-tv')">Volver</button>
+    </div>
+
+    <div id="screen-game" class="screen" style="justify-content: flex-start; padding: 0;">
+        <div id="top-bar">JUGADOR 1</div>
+        <div id="rosco-box"><div id="center-info"><div id="timer">150</div><div id="definition">...</div></div></div>
+        <div id="controls-area">
+            <div id="input-text">
+                <input type="text" id="inp-answer" placeholder="Respuesta..." autocomplete="off">
+                <button class="btn-game bg-pass" onclick="handlePass()">PASO</button>
+                <button class="btn-game bg-ok" onclick="handleText()">OK</button>
+            </div>
+            <div id="input-voice"><div id="voice-msg">Mantén pulsado para hablar</div><div class="mic-btn" id="btn-mic" onmousedown="startVoice()" onmouseup="stopVoice()" ontouchstart="startVoice()" ontouchend="stopVoice()">🎙️</div></div>
+            <div id="controls-host" style="display:none; width:100%; gap:10px;">
+                <div style="flex:1; color:white; text-align:center;"><div style="font-size:0.8rem; color:#aaa;">CORRECTA: <span id="host-real-ans" style="color:var(--correct-bg); font-weight:bold;">...</span></div><div style="font-size:0.8rem; color:#aaa;">DICE: <span id="host-player-say" style="color:var(--blue); font-weight:bold; font-size:1.2rem;">...</span></div></div>
+                <button class="btn-game bg-pass" onclick="hostDecide('pass')">PASO</button><button class="btn-game bg-bad" onclick="hostDecide('wrong')">ERROR</button><button class="btn-game bg-ok" onclick="hostDecide('ok')">BIEN</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-turn" class="screen"><h2 style="margin:0">TURNO DE</h2><span class="next-player-txt" id="txt-next-player">JUGADOR 2</span><button class="btn-big" onclick="resumeGame()">¡LISTO!</button></div>
+
+    <div id="screen-end" class="screen"><h1>RESULTADOS</h1><div style="display:flex; gap:30px; margin:20px 0;"><div style="text-align:center"><div style="color:var(--blue)">P1</div><div style="font-size:4rem; font-weight:bold;" id="score-p1">0</div></div><div style="text-align:center" id="col-p2"><div style="color:var(--purple)">P2</div><div style="font-size:4rem; font-weight:bold;" id="score-p2">0</div></div></div><h2 id="winner-msg" style="color:var(--active-bg)">...</h2><button class="btn-big" onclick="location.reload()">MENU</button></div>
+
+    <div id="modal-info" class="screen" onclick="this.classList.remove('active')"><div class="info-box" onclick="event.stopPropagation()"><div class="info-title" id="info-t">...</div><div class="info-text" id="info-d">...</div><button class="btn-opt" style="margin-top:20px; border-color:var(--blue); color:var(--blue);" onclick="document.getElementById('modal-info').classList.remove('active')">ENTENDIDO</button></div></div>
+
+    <script>
+        // --- 1. BASE DE DATOS (POOL INFINITO) ---
+        const DB_POOL = {
+            A: [{a:"Araña",d:"Arácnido de 8 patas."},{a:"Ambulancia",d:"Vehículo médico."},{a:"Arbol",d:"Planta de tronco leñoso."},{a:"Anillo",d:"Joya para el dedo."},{a:"Alfombra",d:"Tejido para el suelo."}],
+            B: [{a:["Bebida","Beber"],d:"Líquido para la sed."},{a:"Bicicleta",d:"Vehículo a pedales."},{a:"Barco",d:"Vehículo acuático."},{a:"Boton",d:"Sirve para abrochar."},{a:"Ballena",d:"Mamífero marino gigante."}],
+            C: [{a:"Casa",d:"Edificio para habitar."},{a:"Cine",d:"Lugar de películas."},{a:"Cama",d:"Mueble para dormir."},{a:"Cuchara",d:"Utensilio para sopa."},{a:"Camello",d:"Animal con jorobas."}],
+            D: [{a:"Dedo",d:"Parte de la mano."},{a:"Diente",d:"Pieza ósea bucal."},{a:"Dado",d:"Cubo de juegos de azar."},{a:"Dinosaurio",d:"Reptil prehistórico."},{a:"Diamante",d:"Piedra preciosa dura."}],
+            E: [{a:"Elefante",d:"Mamífero con trompa."},{a:"Escuela",d:"Lugar de enseñanza."},{a:"Estrella",d:"Cuerpo celeste brillante."},{a:"Espejo",d:"Refleja la imagen."},{a:"Escalera",d:"Sirve para subir."}],
+            F: [{a:"Foto",d:"Imagen de cámara."},{a:"Fuego",d:"Luz y calor."},{a:"Flor",d:"Parte colorida de planta."},{a:"Fruta",d:"Comestible vegetal."},{a:"Fantasma",d:"Espíritu."}],
+            G: [{a:"Gato",d:"Felino doméstico."},{a:"Guitarra",d:"Instrumento de cuerdas."},{a:"Gorra",d:"Cubre la cabeza."},{a:"Guante",d:"Cubre la mano."},{a:"Goma",d:"Sirve para borrar."}],
+            H: [{a:"Hielo",d:"Agua sólida."},{a:"Hospital",d:"Centro médico."},{a:"Huevo",d:"Lo ponen las aves."},{a:"Hoja",d:"Parte verde de planta."},{a:"Hilo",d:"Hebra para coser."}],
+            I: [{a:"Isla",d:"Tierra rodeada de agua."},{a:"Internet",d:"Red mundial."},{a:"Iglu",d:"Casa de nieve."},{a:"Iman",d:"Atrae hierro."},{a:"Indio",d:"Nativo de América."}],
+            J: [{a:"Jugar",d:"Actividad divertida."},{a:"Jirafa",d:"Animal cuello largo."},{a:"Jabon",d:"Para lavar."},{a:"Jugo",d:"Líquido de frutas."},{a:"Jardin",d:"Terreno con plantas."}],
+            K: [{a:"Kiwi",d:"Fruta verde."},{a:"Karate",d:"Arte marcial."},{a:"Kilo",d:"Mil gramos."},{a:"Koala",d:"Come eucalipto."},{a:"Kiosco",d:"Puesto de golosinas."}],
+            L: [{a:"Luna",d:"Satélite terrestre."},{a:"Libro",d:"Hojas encuadernadas."},{a:"Lapiz",d:"Para escribir."},{a:"Leon",d:"Rey de la selva."},{a:"Lana",d:"Pelo de oveja."}],
+            M: [{a:["Madre","Mama"],d:"Mujer con hijos."},{a:"Mapa",d:"Dibujo de la Tierra."},{a:"Mano",d:"Tiene 5 dedos."},{a:"Mesa",d:"Mueble con patas."},{a:"Mono",d:"Primate."}],
+            N: [{a:"Nube",d:"Vapor en cielo."},{a:"Nariz",d:"Órgano olfato."},{a:"Nido",d:"Refugio de aves."},{a:"Noche",d:"Sin sol."},{a:"Nieve",d:"Agua helada blanca."}],
+            Ñ: [{a:"Ñu",d:"Antílope africano."},{a:"Ñoquis",d:"Pasta de papa."},{a:"Niño",d:"Contiene Ñ: Persona joven."},{a:"Leña",d:"Contiene Ñ: Madera para fuego."},{a:"Araña",d:"Contiene Ñ: Arácnido."}],
+            O: [{a:"Ojo",d:"Órgano vista."},{a:"Oso",d:"Mamífero grande."},{a:"Oreja",d:"Órgano oído."},{a:"Ola",d:"Onda en el mar."},{a:"Oro",d:"Metal amarillo."}],
+            P: [{a:"Pan",d:"Hecho de harina."},{a:"Pelota",d:"Bola de juego."},{a:"Perro",d:"Mejor amigo hombre."},{a:"Pez",d:"Animal acuático."},{a:"Puerta",d:"Abertura pared."}],
+            Q: [{a:"Queso",d:"Producto lácteo."},{a:"Quimica",d:"Ciencia materia."},{a:"Quiosco",d:"Venta callejera."},{a:"Quince",d:"Sigue al catorce."},{a:"Quemadura",d:"Herida por fuego."}],
+            R: [{a:["Raton","Rata"],d:"Roedor pequeño."},{a:"Reloj",d:"Mide tiempo."},{a:"Rio",d:"Corriente de agua."},{a:"Rueda",d:"Pieza circular."},{a:"Rosa",d:"Flor con espinas."}],
+            S: [{a:"Sol",d:"Estrella central."},{a:"Silla",d:"Asiento."},{a:"Sal",d:"Condimento blanco."},{a:"Sapo",d:"Anfibio."},{a:"Sopa",d:"Plato líquido."}],
+            T: [{a:"Tren",d:"Transporte en vías."},{a:"Television",d:"Caja imágenes."},{a:"Tigre",d:"Felino rayado."},{a:"Taza",d:"Recipiente con asa."},{a:"Telefono",d:"Para hablar lejos."}],
+            U: [{a:"Uva",d:"Fruto vid."},{a:"Unicornio",d:"Caballo mágico."},{a:"Uno",d:"Primer número."},{a:"Uña",d:"En punta dedos."},{a:"Universo",d:"Todo lo que existe."}],
+            V: [{a:"Vaca",d:"Hembra toro."},{a:"Ventana",d:"Abertura luz."},{a:"Vela",d:"Cera con mecha."},{a:"Vaso",d:"Recipiente beber."},{a:"Vestido",d:"Prenda femenina."}],
+            W: [{a:"Wifi",d:"Internet aire."},{a:"Web",d:"Red informática."},{a:"Waterpolo",d:"Deporte agua."},{a:"Walkman",d:"Reproductor casete."},{a:"Waffle",d:"Pastel rejilla."}],
+            X: [{a:"Xilofon",d:"Instrumento percusión."},{a:"Xilografia",d:"Grabado madera."},{a:"Taxi",d:"Contiene X: Auto alquiler."},{a:"Boxeo",d:"Contiene X: Deporte guantes."},{a:"Examen",d:"Contiene X: Prueba."}],
+            Y: [{a:"Yate",d:"Barco recreo."},{a:"Yoga",d:"Disciplina relax."},{a:"Yema",d:"Amarillo huevo."},{a:"Yogur",d:"Lácteo fermentado."},{a:"Yoyó",d:"Juguete cuerda."}],
+            Z: [{a:["Zapato","Zapatilla"],d:"Calzado."},{a:"Zanahoria",d:"Hortaliza naranja."},{a:"Zorro",d:"Cánido astuto."},{a:"Zoologico",d:"Exhibición animales."},{a:"Zumo",d:"Jugo frutas."}]
+        };
+
+        // --- CONFIG & STATE ---
+        let CFG = { mode: 'local', players: 1, input: 'text', time: 150, sound: true };
+        let STATE = { currentP: 0, pData: [], active: false, interval: null, role: 'none', conn: null, peer: null };
+        const HELP_DATA={'local':{t:"MODO LOCAL",d:"Juegan 1 o 2 personas en un solo dispositivo, pasándose el turno."},'tv':{t:"MODO TV",d:"Requiere 2 dispositivos con Internet. Uno hace de Presentador (lee y valida) y el otro de Jugador."},'players':{t:"JUGADORES",d:"<b>1 Jugador:</b> Contrarreloj.<br><b>2 Jugadores:</b> Turnos competitivos. (Sin repetición de palabras)"},'voice':{t:"MODO VOZ",d:"Usa el micrófono. ⚠️ <b>Recomendación:</b> Hablen de a uno para que el sistema entienda bien."},'host':{t:"PRESENTADOR",d:"Tú controlas el juego, ves las respuestas y validas."},'client':{t:"JUGADOR",d:"Te conectas a la sala y respondes."}};
+
+        // --- 3. GENERADOR DE ROSCO ÚNICO ---
+        function generateGameData(numPlayers) {
+            let pLetters = Array(numPlayers).fill().map(() => []);
+            const alphabet = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ".split("");
+
+            alphabet.forEach(char => {
+                // Copiar pool y mezclar para esa letra
+                let pool = JSON.parse(JSON.stringify(DB_POOL[char]));
+                pool.sort(() => Math.random() - 0.5);
+
+                // Repartir sin repetir
+                for(let i=0; i<numPlayers; i++) {
+                    let item = pool[i] || pool[0]; // Si faltan, usa el 0 (raro)
+                    item.l = char;
+                    item.status = 'pending';
+                    pLetters[i].push(item);
+                }
+            });
+            return pLetters;
+        }
+
+        // --- UI & LOGIC ---
+        function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+        function setOpt(k,v,b){CFG[k]=v;b.parentElement.querySelectorAll('.btn-opt').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');}
+        function showInfo(k){document.getElementById('info-t').innerText=HELP_DATA[k].t;document.getElementById('info-d').innerHTML=HELP_DATA[k].d;document.getElementById('modal-info').classList.add('active');}
+        function toggleSound(){CFG.sound=!CFG.sound;const b=document.getElementById('btn-sound');b.innerText=CFG.sound?"🔊 SONIDO: ON":"🔇 SONIDO: OFF";b.style.color=CFG.sound?"var(--correct-bg)":"#aaa";b.style.borderColor=CFG.sound?"var(--correct-bg)":"#aaa";}
+        function selectFlow(m){CFG.mode=m;show(m==='local'?'screen-setup-local':'screen-setup-tv');}
+
+        const SFX={ctx:null,init:function(){if(!this.ctx)this.ctx=new(window.AudioContext||window.webkitAudioContext)();},play:function(t){if(!CFG.sound||!this.ctx)return;if(this.ctx.state==='suspended')this.ctx.resume();const c=this.ctx.currentTime,o=this.ctx.createOscillator(),g=this.ctx.createGain();o.connect(g);g.connect(this.ctx.destination);if(t==='ok'){o.type='sine';o.frequency.setValueAtTime(600,c);o.frequency.linearRampToValueAtTime(1200,c+0.1);g.gain.value=0.1;o.start(c);o.stop(c+0.2);}else if(t==='bad'){o.type='sawtooth';o.frequency.setValueAtTime(150,c);g.gain.value=0.1;o.start(c);o.stop(c+0.3);}else if(t==='pass'){o.type='triangle';o.frequency.setValueAtTime(300,c);g.gain.linearRampToValueAtTime(0,c+0.1);o.start(c);o.stop(c+0.1);}else if(t==='tick'){o.type='square';o.frequency.setValueAtTime(800,c);g.gain.setValueAtTime(0.05,c);o.start(c);o.stop(c+0.05);}}};
+
+        function initGame(){
+            SFX.init(); STATE.role='local';
+            STATE.pData=[];
+            const lettersData = generateGameData(CFG.players); // Genera datos únicos
+            
+            for(let i=0;i<CFG.players;i++){
+                STATE.pData.push({id:i,name:"JUGADOR "+(i+1),letters:lettersData[i],idx:0,timer:CFG.time,finished:false});
+            }
+            STATE.currentP=0; STATE.active=true;
+            document.getElementById('input-text').style.display=CFG.input==='text'?'flex':'none';
+            document.getElementById('input-voice').style.display=CFG.input==='voice'?'flex':'none';
+            if(CFG.input==='voice') setupVoice();
+            document.getElementById('controls-host').style.display='none';
+            show('screen-game'); loadTurn();
+        }
+
+        // TV LOGIC
+        function initHost(){
+            STATE.role='host'; CFG.players=1; show('screen-host-lobby');
+            const code=Math.random().toString(36).substring(2,6).toUpperCase();
+            STATE.peer=new Peer('rosco-'+code);
+            
+            // Timeout de advertencia
+            setTimeout(()=>{ if(!STATE.conn) document.getElementById('conn-warning').style.display='block'; }, 5000);
+
+            STATE.peer.on('open',()=>document.getElementById('host-code').innerText=code);
+            STATE.peer.on('connection',c=>{
+                STATE.conn=c; document.getElementById('host-status').innerText="CONECTADO";
+                setTimeout(()=>{
+                    const lettersTV = generateGameData(1)[0];
+                    STATE.pData=[{id:0,name:"JUGADOR TV",letters:lettersTV,idx:0,timer:CFG.time,finished:false}];
+                    STATE.currentP=0; STATE.active=true;
+                    document.getElementById('input-text').style.display='none';
+                    document.getElementById('input-voice').style.display='none';
+                    document.getElementById('controls-host').style.display='flex';
+                    show('screen-game'); loadTurn(); syncTV();
+                },1500);
+                c.on('data',d=>{if(d.type==='INPUT'){document.getElementById('host-player-say').innerText=d.val.toUpperCase();SFX.play('pass');}});
+            });
+        }
+        function joinGame(){
+            STATE.role='client';
+            const code=document.getElementById('join-code').value.trim().toLowerCase();
+            document.getElementById('join-status').innerText="Conectando...";
+            STATE.peer=new Peer();
+            STATE.peer.on('open', ()=>{
+                const c=STATE.peer.connect('rosco-'+code);
+                c.on('open', ()=>{
+                    STATE.conn=c; document.getElementById('input-text').style.display='flex';
+                    document.getElementById('input-voice').style.display='flex';
+                    document.getElementById('controls-host').style.display='none';
+                    show('screen-game'); setupVoice();
+                });
+                c.on('data',d=>{
+                    if(d.type==='STATE'){
+                        STATE.pData=d.pData; STATE.currentP=0; STATE.active=d.active;
+                        if(!STATE.active) endGame(false);
+                        renderRosco(); updateCircleUI();
+                    }
+                });
+            });
+            STATE.peer.on('error', e => document.getElementById('join-status').innerText="Error de red (NAT). Usar Local.");
+        }
+
+        // MOTOR
+        function loadTurn(){
+            const p=STATE.pData[STATE.currentP];
+            document.getElementById('top-bar').innerText=p.name;
+            document.getElementById('top-bar').style.color=p.id===0?'var(--blue)':'var(--purple)';
+            renderRosco(); updateCircleUI(); startTimer();
+            if(CFG.input==='text' && STATE.role==='local') setTimeout(()=>document.getElementById('inp-answer').focus(),100);
+        }
+        function renderRosco(){
+            const p=STATE.pData[STATE.currentP];
+            const box=document.getElementById('rosco-box');
+            const center=document.getElementById('center-info');
+            box.innerHTML=''; box.appendChild(center);
+            const r=42, step=(2*Math.PI)/p.letters.length;
+            p.letters.forEach((l,i)=>{
+                const a=(step*i)-(Math.PI/2);
+                const x=50+r*Math.cos(a); const y=50+r*Math.sin(a);
+                const d=document.createElement('div');
+                d.className='letter '+l.status; d.id='let-'+i; d.innerText=l.l;
+                d.style.left=x+'%'; d.style.top=y+'%'; d.style.transform='translate(-50%,-50%)';
+                box.appendChild(d);
+            });
+            document.getElementById('timer').innerText=p.timer;
+        }
+        function updateCircleUI(){
+            const p=STATE.pData[STATE.currentP];
+            let start=p.idx, found=false;
+            for(let i=0;i<p.letters.length;i++){
+                let k=(start+i)%p.letters.length;
+                if(p.letters[k].status==='pending'){p.idx=k; found=true; break;}
+            }
+            if(!found){p.finished=true; handleEndTurn(); return;}
+            document.querySelectorAll('.letter').forEach(l=>l.classList.remove('active'));
+            requestAnimationFrame(() => { const el = document.getElementById('let-'+p.idx); if(el) el.classList.add('active'); });
+            const curr=p.letters[p.idx];
+            document.getElementById('definition').innerHTML=`<span style="color:var(--active-bg); font-weight:bold;">CON LA ${curr.l}:</span><br>${curr.d}`;
+            if(STATE.role==='host'){
+                const ans=Array.isArray(curr.a)?curr.a[0]:curr.a;
+                document.getElementById('host-real-ans').innerText=ans.toUpperCase();
+            }
+        }
+
+        // VALIDACIÓN
+        function checkAnswer(val){
+            if(STATE.role==='client'){ STATE.conn.send({type:'INPUT',val:val}); document.getElementById('inp-answer').value=''; return; }
+            const p=STATE.pData[STATE.currentP];
+            const curr=p.letters[p.idx];
+            const u=normalize(val);
+            const ansArr=Array.isArray(curr.a)?curr.a:[curr.a];
+            const vArr=ansArr.map(x=>normalize(x));
+            let turnEnd=false;
+            
+            if(u.includes('pasapalabra')||u.includes('paso')||val==='PASS'){
+                turnEnd=true; SFX.play('pass');
+            } else if(vArr.includes(u)){
+                curr.status='correct'; SFX.play('ok'); turnEnd=false;
+                document.getElementById('let-'+p.idx).className='letter correct';
+            } else {
+                curr.status='wrong'; SFX.play('bad'); turnEnd=true;
+                document.getElementById('let-'+p.idx).className='letter wrong';
+            }
+            document.getElementById('inp-answer').value='';
+            document.getElementById('host-player-say').innerText="...";
+            p.idx++;
+            if(CFG.players===2 && turnEnd) switchTurn(); else updateCircleUI();
+            if(STATE.role==='host') syncTV();
+        }
+
+        function hostDecide(action){ if(action==='pass') checkAnswer('PASS'); else { const p=STATE.pData[STATE.currentP]; p.letters[p.idx].status=action==='ok'?'correct':'wrong'; SFX.play(action==='ok'?'ok':'bad'); p.idx++; updateCircleUI(); syncTV(); document.getElementById('host-player-say').innerText="..."; } }
+        function handlePass(){ checkAnswer('PASS'); }
+        function handleText(){ const v=document.getElementById('inp-answer').value; if(v.trim()!=='') checkAnswer(v); }
+
+        function switchTurn(){
+            clearInterval(STATE.interval);
+            const next=(STATE.currentP+1)%2;
+            if(STATE.pData[next].finished){
+                if(STATE.pData[STATE.currentP].finished) endGame(); else { updateCircleUI(); startTimer(); }
+                return;
+            }
+            STATE.currentP=next;
+            document.getElementById('txt-next-player').innerText=STATE.pData[next].name;
+            document.getElementById('txt-next-player').style.color=next===0?'var(--blue)':'var(--purple)';
+            show('screen-turn');
+        }
+        function resumeGame(){ show('screen-game'); loadTurn(); }
+        function handleEndTurn(){ if(CFG.players===1 || STATE.role==='host') endGame(); else switchTurn(); }
+        function startTimer(){
+            if(STATE.interval) clearInterval(STATE.interval);
+            if(STATE.role==='client') return;
+            const p=STATE.pData[STATE.currentP];
+            STATE.interval=setInterval(()=>{
+                p.timer--; document.getElementById('timer').innerText=p.timer;
+                if(p.timer<=10) SFX.play('tick');
+                if(STATE.role==='host') syncTV();
+                if(p.timer<=0){ clearInterval(STATE.interval); p.finished=true; if(CFG.players===2) switchTurn(); else endGame(); }
+            },1000);
+        }
+        function syncTV(){ if(STATE.conn) STATE.conn.send({type:'STATE', pData:STATE.pData, active:STATE.active}); }
+        function endGame(source=true){
+            STATE.active=false; clearInterval(STATE.interval); show('screen-end');
+            const s1=STATE.pData[0].letters.filter(l=>l.status==='correct').length;
+            document.getElementById('score-p1').innerText=s1;
+            if(CFG.players===2){
+                document.getElementById('col-p2').style.display='block';
+                const s2=STATE.pData[1].letters.filter(l=>l.status==='correct').length;
+                document.getElementById('score-p2').innerText=s2;
+                let w="EMPATE"; if(s1>s2)w="¡GANA JUGADOR 1!"; if(s2>s1)w="¡GANA JUGADOR 2!";
+                document.getElementById('winner-msg').innerText=w;
+            } else {
+                document.getElementById('col-p2').style.display='none';
+                document.getElementById('winner-msg').innerText="FIN DEL JUEGO";
+            }
+            if(source && STATE.role==='host') syncTV();
+        }
+        function normalize(s){return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim();}
+        document.getElementById('inp-answer').addEventListener("keypress",(e)=>{if(e.key==="Enter")handleText()});
+        function setupVoice(){
+            const S=window.SpeechRecognition||window.webkitSpeechRecognition; if(!S)return;
+            const rec=new S(); rec.lang='es-ES'; rec.continuous=false;
+            rec.onstart=()=>{document.getElementById('btn-mic').classList.add('listening'); document.getElementById('voice-msg').innerText="Escuchando...";};
+            rec.onend=()=>{document.getElementById('btn-mic').classList.remove('listening'); document.getElementById('voice-msg').innerText="Mantén pulsado";};
+            rec.onresult=(e)=>{const t=e.results[0][0].transcript; document.getElementById('inp-answer').value=t; setTimeout(()=>checkAnswer(t),500);};
+            STATE.rec=rec;
+        }
+        function startVoice(){if(STATE.rec)try{STATE.rec.start();}catch(e){}}
+        function stopVoice(){if(STATE.rec)try{STATE.rec.stop();}catch(e){}}
+    </script>
+</body>
+</html>

@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2c3e50">
+    
+    <title>100 Dicen - FranMa</title>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- ESTÉTICA --- */
+        :root {
+            --bg-grad: radial-gradient(circle, #34495e, #2c3e50);
+            --card-front: linear-gradient(135deg, #2980b9, #3498db);
+            --card-back: #ecf0f1;
+            --yellow: #f1c40f; 
+            --red: #e74c3c; 
+            --green: #27ae60;
+            --text-main: #fff;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0; height: 100vh; overflow: hidden;
+            background: var(--bg-grad);
+            font-family: 'Roboto Condensed', sans-serif;
+            color: var(--text-main); user-select: none;
+            display: flex; flex-direction: column;
+        }
+
+        /* PANTALLAS */
+        .screen { display: none; flex-direction: column; width: 100%; height: 100%; align-items: center; justify-content: center; position: absolute; top:0; left:0; z-index: 10; padding: 15px; }
+        .active { display: flex; animation: fadeUp 0.4s; }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+        /* --- PORTADA Y MENÚ --- */
+        .logo-box { text-align: center; margin-bottom: 20px; }
+        .franma-logo { font-family: 'Anton'; font-size: 1.5rem; letter-spacing: 2px; color: #aaa; margin-bottom: 5px; text-transform: uppercase; }
+        h1 { font-family: 'Anton'; font-size: 3.5rem; margin: 0; line-height: 0.9; color: var(--yellow); text-shadow: 3px 3px 0 #000; text-transform: uppercase; }
+
+        .setup-group { width: 100%; max-width: 400px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 15px; margin-bottom: 10px; }
+        .setup-label { font-size: 0.9rem; color: #ccc; margin-bottom: 5px; display: block; text-transform: uppercase; }
+        
+        .name-inputs { display: flex; gap: 10px; }
+        .inp-name { flex: 1; padding: 10px; border-radius: 8px; border: none; background: #fff; font-family: 'Roboto Condensed'; font-weight: bold; text-align: center; }
+
+        .rounds-container { display: flex; gap: 10px; justify-content: center; }
+        .btn-round { flex: 1; padding: 10px; background: transparent; border: 2px solid #7f8c8d; color: #95a5a6; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-round.selected { border-color: var(--yellow); color: var(--yellow); background: rgba(241, 196, 15, 0.1); }
+
+        .btn-start { background: var(--yellow); color: #2c3e50; border: none; padding: 15px 50px; font-size: 1.5rem; font-family: 'Anton'; border-radius: 50px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.3); margin-top: 15px; width: 100%; max-width: 300px; }
+        .btn-link { background: none; border: none; color: #aaa; text-decoration: underline; margin-top: 15px; cursor: pointer; font-size: 0.9rem; }
+
+        /* --- JUEGO --- */
+        #game-header { width: 100%; text-align: center; height: 12%; display: flex; flex-direction: column; justify-content: center; }
+        #round-indicator { font-size: 0.8rem; color: var(--yellow); letter-spacing: 1px; }
+        #question-box { font-size: 1.1rem; text-transform: uppercase; text-shadow: 1px 1px 2px #000; padding: 0 10px; line-height: 1.2; }
+
+        #board-area { flex: 1; width: 100%; display: flex; align-items: center; justify-content: center; padding: 10px 0; }
+        #board { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; max-width: 700px; }
+
+        .card-container { perspective: 1000px; height: 50px; cursor: pointer; position: relative; }
+        .card { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.6s; }
+        .card.flipped { transform: rotateX(180deg); }
+        
+        .front, .back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 5px; display: flex; align-items: center; justify-content: space-between; border: 2px solid #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.3); overflow: hidden; }
+        .front { background: var(--card-front); justify-content: center; }
+        .num-badge { background: #000; border: 2px solid var(--yellow); color: var(--yellow); width: 32px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Anton'; }
+        
+        .back { background: var(--card-back); color: #2c3e50; transform: rotateX(180deg); padding: 0 10px; }
+        .ans-text { font-family: 'Roboto Condensed'; font-weight: bold; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.95rem; }
+        .points-box { background: #2c3e50; color: #fff; padding: 2px 8px; font-family: 'Anton'; min-width: 30px; text-align: center; }
+
+        #controls { height: 35%; width: 100%; padding-bottom: 5px; display: flex; gap: 5px; }
+        .team-panel { flex: 1; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; display: flex; flex-direction: column; padding: 5px; transition: 0.3s; position: relative; overflow: hidden; }
+        .team-panel.locked { opacity: 0.4; pointer-events: none; background: #000; }
+
+        .team-name { font-size: 0.9rem; text-align: center; color: var(--yellow); margin-bottom: 2px; font-weight: bold; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .strikes-row { display: flex; justify-content: center; gap: 4px; margin-bottom: 5px; height: 18px; }
+        .x-mark { width: 18px; height: 18px; border-radius: 50%; background: #333; border: 1px solid #555; color: transparent; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; }
+        .x-mark.active { background: var(--red); color: white; border-color: white; box-shadow: 0 0 8px var(--red); }
+
+        .team-score { font-family: 'Anton'; font-size: 3rem; text-align: center; flex: 1; display: flex; align-items: center; justify-content: center; text-shadow: 2px 2px 0 rgba(0,0,0,0.3); }
+        
+        .input-wrapper { position: relative; width: 100%; margin-top: auto; }
+        .team-input { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; text-align: center; text-transform: uppercase; outline: none; background: #fff; color: #000; font-size: 1rem; }
+        .team-input:focus { box-shadow: 0 0 0 3px var(--yellow); }
+
+        .center-ctrl { width: 60px; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 10px; }
+        .btn-next { background: var(--green); color: white; border: none; padding: 10px 5px; width: 100%; font-size: 0.7rem; font-weight: bold; cursor: pointer; border-radius: 5px; writing-mode: vertical-rl; text-orientation: mixed; height: 100%; box-shadow: 0 4px 0 #1e8449; transition: 0.2s; }
+        .btn-next:active { transform: translateY(4px); box-shadow: none; }
+        .btn-next.highlight { background: var(--yellow); color: #000; animation: pulse 1s infinite; }
+
+        #modal-strike { background: rgba(0,0,0,0.85); z-index: 100; display: none; align-items: center; justify-content: center; }
+        .big-x { font-family: 'Anton'; font-size: 15rem; color: var(--red); text-shadow: 0 0 50px red; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        
+        #modal-help { background: rgba(0,0,0,0.95); z-index: 100; padding: 30px; display: none; overflow-y: auto; }
+        .help-box { max-width: 500px; color: #ddd; line-height: 1.5; }
+        .help-title { color: var(--yellow); font-family: 'Anton'; font-size: 2rem; margin-bottom: 15px; border-bottom: 1px solid #555; }
+
+        @keyframes popIn { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
+    </style>
+</head>
+<body>
+
+    <div id="screen-home" class="screen active">
+        <div class="logo-box">
+            <div class="franma-logo">FRANMA GAMES</div>
+            <h1>100<br>PERSONAS<br>DICEN</h1>
+        </div>
+
+        <div class="setup-group">
+            <label class="setup-label">Nombres de Equipos</label>
+            <div class="name-inputs">
+                <input type="text" id="name1" class="inp-name" value="Equipo 1" placeholder="Equipo 1">
+                <input type="text" id="name2" class="inp-name" value="Equipo 2" placeholder="Equipo 2">
+            </div>
+        </div>
+
+        <div class="setup-group">
+            <label class="setup-label">Duración (Rondas)</label>
+            <div class="rounds-container">
+                <button class="btn-round selected" onclick="setRounds(3, this)">3</button>
+                <button class="btn-round" onclick="setRounds(5, this)">5</button>
+                <button class="btn-round" onclick="setRounds(7, this)">7</button>
+            </div>
+        </div>
+
+        <button class="btn-start" onclick="startGame()">JUGAR</button>
+        <button class="btn-link" onclick="document.getElementById('modal-help').style.display='flex'">¿Cómo se juega?</button>
+    </div>
+
+    <div id="screen-game" class="screen">
+        
+        <div id="game-header">
+            <div id="round-indicator">RONDA 1 / 5</div>
+            <div id="question-box">CARGANDO...</div>
+        </div>
+
+        <div id="board-area">
+            <div id="board"></div>
+        </div>
+
+        <div id="controls">
+            <div class="team-panel" id="panel-1">
+                <div class="team-name" id="lbl-name1">EQ 1</div>
+                <div class="strikes-row">
+                    <div class="x-mark" id="x1-1">X</div>
+                    <div class="x-mark" id="x1-2">X</div>
+                    <div class="x-mark" id="x1-3">X</div>
+                </div>
+                <div class="team-score" id="score-1">0</div>
+                <div class="input-wrapper">
+                    <input type="text" class="team-input" id="in-1" placeholder="Respuesta..." onkeypress="checkEnter(event, 1)">
+                </div>
+            </div>
+
+            <div class="center-ctrl">
+                <button class="btn-next" id="btn-next" onclick="nextRound()">SIGUIENTE</button>
+            </div>
+
+            <div class="team-panel" id="panel-2">
+                <div class="team-name" id="lbl-name2">EQ 2</div>
+                <div class="strikes-row">
+                    <div class="x-mark" id="x2-1">X</div>
+                    <div class="x-mark" id="x2-2">X</div>
+                    <div class="x-mark" id="x2-3">X</div>
+                </div>
+                <div class="team-score" id="score-2">0</div>
+                <div class="input-wrapper">
+                    <input type="text" class="team-input" id="in-2" placeholder="Respuesta..." onkeypress="checkEnter(event, 2)">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-strike" class="screen">
+        <div class="big-x">X</div>
+    </div>
+
+    <div id="modal-help" class="screen">
+        <div class="help-box">
+            <div class="help-title">REGLAS</div>
+            <p>1. <b>El Presentador</b> lee la pregunta.</p>
+            <p>2. Los equipos escriben su respuesta en su caja de texto.</p>
+            <p>3. <b>Si aciertan:</b> Se suman los puntos automáticamente.</p>
+            <p>4. <b>Si fallan:</b> Suman un Strike (X).</p>
+            <p>5. Al llegar a <b>3 Strikes</b>, el equipo queda bloqueado.</p>
+            <p>6. Si ambos equipos se bloquean, se revelan las respuestas y se pasa de ronda.</p>
+            <button class="btn-start" style="font-size:1rem; padding:10px;" onclick="document.getElementById('modal-help').style.display='none'">ENTENDIDO</button>
+        </div>
+    </div>
+
+    <div id="screen-end" class="screen">
+        <h1>FINAL</h1>
+        <div id="winner-text" style="font-size:2rem; margin-bottom:20px; color:#f1c40f; text-align:center;"></div>
+        <button class="btn-start" onclick="location.reload()">MENU</button>
+    </div>
+
+    <script>
+        // --- BASE DE DATOS CON SINÓNIMOS ---
+        // 't': Título principal (lo que se muestra)
+        // 's': Sinónimos aceptados (para la validación)
+        // 'p': Puntos
+        const DB = [
+            { 
+                q: "Algo que haces apenas te levantas", 
+                a: [ 
+                    {t: "IR AL BAÑO", s: ["baño", "pichí", "orinar", "cagar", "inodoro"], p: 35}, 
+                    {t: "LAVARSE DIENTES", s: ["dientes", "cepillarse", "boca"], p: 24}, 
+                    {t: "MIRAR EL CELULAR", s: ["celular", "móvil", "teléfono", "redes", "whatsapp"], p: 18}, 
+                    {t: "TOMAR AGUA", s: ["agua", "beber", "sed", "café", "mate"], p: 12}, 
+                    {t: "APAGAR ALARMA", s: ["alarma", "reloj", "despertador", "posponer"], p: 8}, 
+                    {t: "ESTIRARSE", s: ["estirar", "bostezar", "desperezarse"], p: 3} 
+                ] 
+            },
+            { 
+                q: "Lugar donde no usas celular", 
+                a: [ 
+                    {t: "CINE", s: ["cine", "película"], p: 40}, 
+                    {t: "IGLESIA", s: ["iglesia", "misa", "templo", "culto"], p: 25}, 
+                    {t: "AVIÓN", s: ["avión", "aeropuerto", "vuelo"], p: 15}, 
+                    {t: "BANCO", s: ["banco", "cajero"], p: 10}, 
+                    {t: "EXAMEN", s: ["examen", "prueba", "colegio", "clase"], p: 6}, 
+                    {t: "FUNERAL", s: ["funeral", "entierro", "velorio"], p: 4} 
+                ] 
+            },
+            { 
+                q: "Cosas que se pierden fácil", 
+                a: [ 
+                    {t: "LLAVES", s: ["llaves", "llavero"], p: 38}, 
+                    {t: "CELULAR", s: ["celu", "móvil", "teléfono"], p: 22}, 
+                    {t: "CONTROL REMOTO", s: ["control", "mando", "remoto"], p: 16}, 
+                    {t: "LENTES", s: ["lentes", "anteojos", "gafas"], p: 10}, 
+                    {t: "BILLETERA", s: ["billetera", "cartera", "dinero", "plata"], p: 8}, 
+                    {t: "PACIENCIA", s: ["paciencia", "calma"], p: 6} 
+                ] 
+            },
+            { 
+                q: "Animal de mala suerte", 
+                a: [ 
+                    {t: "GATO NEGRO", s: ["gato", "gato negro", "felino"], p: 55}, 
+                    {t: "CUERVO", s: ["cuervo", "pájaro negro"], p: 18}, 
+                    {t: "SERPIENTE", s: ["serpiente", "víbora", "culebra"], p: 10}, 
+                    {t: "BUHO", s: ["búho", "lechuza"], p: 8}, 
+                    {t: "MURCIELAGO", s: ["murciélago", "vampiro"], p: 5}, 
+                    {t: "ARAÑA", s: ["araña", "tarántula"], p: 4} 
+                ] 
+            },
+            { 
+                q: "Se compra por metro", 
+                a: [ 
+                    {t: "TELA", s: ["tela", "género", "ropa"], p: 42}, 
+                    {t: "CABLE", s: ["cable", "alambre"], p: 20}, 
+                    {t: "SOGA", s: ["soga", "cuerda", "piola"], p: 15}, 
+                    {t: "TERRENO", s: ["terreno", "tierra", "lote", "piso"], p: 10}, 
+                    {t: "CINTA", s: ["cinta", "lazo"], p: 8}, 
+                    {t: "ALAMBRE", s: ["alambre", "tejido"], p: 5} 
+                ] 
+            },
+            { 
+                q: "Excusa para llegar tarde", 
+                a: [ 
+                    {t: "TRÁFICO", s: ["tráfico", "tránsito", "embotellamiento", "taco"], p: 45}, 
+                    {t: "ME DORMÍ", s: ["dormí", "sueño", "cama"], p: 25}, 
+                    {t: "TRANSPORTE", s: ["colectivo", "bondi", "tren", "micro", "subte"], p: 12}, 
+                    {t: "ENFERMO", s: ["enfermo", "médico", "doctor", "fiebre"], p: 10}, 
+                    {t: "ALARMA", s: ["alarma", "despertador"], p: 5}, 
+                    {t: "LLUVIA", s: ["lluvia", "tormenta", "clima"], p: 3} 
+                ] 
+            },
+            { 
+                q: "Tiene agujeros y retiene agua", 
+                a: [ 
+                    {t: "ESPONJA", s: ["esponja"], p: 60}, 
+                    {t: "TRAPO", s: ["trapo", "rejilla", "paño"], p: 20}, 
+                    {t: "TOALLA", s: ["toalla", "toallón"], p: 10}, 
+                    {t: "COLADOR", s: ["colador"], p: 5}, 
+                    {t: "REGADERA", s: ["regadera"], p: 5}, 
+                    {t: "QUESO", s: ["queso", "gruyere"], p: 2} 
+                ] 
+            },
+            { 
+                q: "Fruta roja", 
+                a: [ 
+                    {t: "MANZANA", s: ["manzana"], p: 40}, 
+                    {t: "FRUTILLA", s: ["frutilla", "fresa"], p: 30}, 
+                    {t: "CEREZA", s: ["cereza", "guinda"], p: 15}, 
+                    {t: "SANDÍA", s: ["sandía"], p: 10}, 
+                    {t: "FRAMBUESA", s: ["frambuesa"], p: 5}, 
+                    {t: "TOMATE", s: ["tomate"], p: 2} 
+                ] 
+            },
+            { 
+                q: "Cosas que llevan queso", 
+                a: [ 
+                    {t: "PIZZA", s: ["pizza", "pisa"], p: 45}, 
+                    {t: "SANDWICH", s: ["sandwich", "sanguche", "tostado"], p: 20}, 
+                    {t: "PASTA", s: ["pasta", "fideos", "macarrones", "tallarines", "ñoquis", "lasaña"], p: 15}, 
+                    {t: "HAMBURGUESA", s: ["hamburguesa", "burger"], p: 10}, 
+                    {t: "EMPANADA", s: ["empanada", "tarta"], p: 5}, 
+                    {t: "NACHOS", s: ["nachos", "tacos"], p: 5} 
+                ] 
+            }
+        ];
+
+        // --- ESTADO ---
+        let state = {
+            maxRounds: 3, round: 0, scores: [0, 0], names: ["", ""],
+            strikes: {1: 0, 2: 0}, questions: [], currentAnswers: [], roundOver: false
+        };
+
+        // --- CONFIG ---
+        function setRounds(n, btn) {
+            state.maxRounds = n;
+            document.querySelectorAll('.btn-round').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+        }
+
+        // --- AUDIO ---
+        const SFX={ctx:null,init:function(){if(!this.ctx)this.ctx=new(window.AudioContext||window.webkitAudioContext)();},play:function(t){if(!this.ctx)return;if(this.ctx.state==='suspended')this.ctx.resume();const c=this.ctx.currentTime,o=this.ctx.createOscillator(),g=this.ctx.createGain();o.connect(g);g.connect(this.ctx.destination);if(t==='ding'){o.frequency.setValueAtTime(800,c);o.frequency.linearRampToValueAtTime(1200,c+0.1);g.gain.setValueAtTime(0.1,c);g.gain.linearRampToValueAtTime(0,c+0.5);o.start(c);o.stop(c+0.5);}else if(t==='buzz'){o.type='sawtooth';o.frequency.setValueAtTime(100,c);g.gain.setValueAtTime(0.3,c);g.gain.linearRampToValueAtTime(0,c+0.4);o.start(c);o.stop(c+0.4);}}};
+
+        // --- CORE ---
+        function startGame() {
+            SFX.init();
+            state.names[0] = document.getElementById('name1').value || "Equipo 1";
+            state.names[1] = document.getElementById('name2').value || "Equipo 2";
+            state.questions = [...DB].sort(()=>Math.random()-0.5).slice(0, state.maxRounds);
+            state.round = 0; state.scores = [0,0];
+            
+            document.getElementById('lbl-name1').innerText = state.names[0];
+            document.getElementById('lbl-name2').innerText = state.names[1];
+            
+            document.getElementById('screen-home').style.display='none';
+            document.getElementById('screen-game').style.display='flex';
+            loadRound();
+        }
+
+        function loadRound() {
+            if(state.round >= state.questions.length) { endGame(); return; }
+            
+            // Reset
+            state.strikes = {1:0, 2:0};
+            state.roundOver = false;
+            
+            // UI Update
+            document.getElementById('round-indicator').innerText = `RONDA ${state.round+1} / ${state.maxRounds}`;
+            document.getElementById('panel-1').classList.remove('locked');
+            document.getElementById('panel-2').classList.remove('locked');
+            document.getElementById('in-1').disabled = false;
+            document.getElementById('in-2').disabled = false;
+            document.getElementById('btn-next').classList.remove('highlight');
+            updateUI();
+            
+            // Cargar datos
+            const qData = state.questions[state.round];
+            state.currentAnswers = qData.a.map(x => ({...x, revealed:false}));
+            document.getElementById('question-box').innerText = qData.q;
+
+            // Render Tablero
+            const board = document.getElementById('board'); board.innerHTML='';
+            let displayList = [...state.currentAnswers];
+            while(displayList.length < 8) displayList.push(null);
+
+            displayList.forEach((ans, i) => {
+                const div = document.createElement('div'); div.className='card-container';
+                if(ans) {
+                    div.innerHTML = `<div class="card" id="card-${i}"><div class="front"><div class="num-badge">${i+1}</div></div><div class="back" id="back-${i}"><div class="ans-text">${ans.t}</div><div class="points-box">${ans.p}</div></div></div>`;
+                    div.onclick = () => manualReveal(i); 
+                } else {
+                    div.innerHTML = `<div class="card"><div class="front" style="opacity:0.2; background:#000;"></div></div>`; div.style.pointerEvents='none';
+                }
+                board.appendChild(div);
+            });
+        }
+
+        // --- INPUT & FUZZY MATCH ---
+        function checkEnter(e, teamId) {
+            if(e.key === "Enter") {
+                if(state.roundOver) return;
+                const inputEl = document.getElementById('in-'+teamId);
+                const val = inputEl.value.trim();
+                if(val) processInput(val, teamId);
+                inputEl.value = '';
+            }
+        }
+
+        function processInput(text, teamId) {
+            // Normalizar entrada usuario
+            const cleanText = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            let matchIndex = -1;
+
+            state.currentAnswers.forEach((ans, i) => {
+                if(ans.revealed) return;
+                
+                // Revisar sinónimos (si existen)
+                if(ans.s) {
+                    ans.s.forEach(synonym => {
+                        const cleanSyn = synonym.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                        // Coincidencia exacta o contenida (para plurales simples)
+                        if(cleanText === cleanSyn || (cleanText.length > 3 && cleanSyn.includes(cleanText))) {
+                            matchIndex = i;
+                        }
+                    });
+                }
+                
+                // Revisar título principal también
+                const cleanTitle = ans.t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                if(cleanText === cleanTitle || (cleanText.length > 3 && cleanTitle.includes(cleanText))) {
+                    matchIndex = i;
+                }
+            });
+
+            if(matchIndex !== -1) {
+                revealCard(matchIndex, teamId); 
+            } else {
+                triggerStrike(teamId); 
+            }
+        }
+
+        function manualReveal(idx) {
+            if(!state.currentAnswers[idx].revealed) revealCard(idx, null);
+        }
+
+        function revealCard(idx, teamId) {
+            state.currentAnswers[idx].revealed = true;
+            document.getElementById(`card-${idx}`).classList.add('flipped');
+            
+            if(!state.roundOver) {
+                SFX.play('ding');
+                if(teamId) {
+                    state.scores[teamId-1] += state.currentAnswers[idx].p;
+                    updateUI();
+                }
+                // Check win
+                if(state.currentAnswers.every(a => a.revealed)) {
+                    document.getElementById('btn-next').classList.add('highlight');
+                }
+            }
+        }
+
+        function triggerStrike(teamId) {
+            if(state.strikes[teamId] >= 3) return;
+            state.strikes[teamId]++;
+            SFX.play('buzz');
+            
+            const m = document.getElementById('modal-strike');
+            m.style.display = 'flex';
+            setTimeout(() => m.style.display = 'none', 800);
+            
+            updateUI();
+            
+            if(state.strikes[teamId] >= 3) {
+                document.getElementById('panel-'+teamId).classList.add('locked');
+                document.getElementById('in-'+teamId).disabled = true;
+            }
+            
+            if(state.strikes[1] >= 3 && state.strikes[2] >= 3) {
+                state.roundOver = true;
+                state.currentAnswers.forEach((ans, i) => {
+                    if(!ans.revealed) setTimeout(() => revealCard(i, null), i*100);
+                });
+                document.getElementById('btn-next').classList.add('highlight');
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('score-1').innerText = state.scores[0];
+            document.getElementById('score-2').innerText = state.scores[1];
+            
+            for(let t=1; t<=2; t++) {
+                for(let s=1; s<=3; s++) {
+                    const el = document.getElementById(`x${t}-${s}`);
+                    if(s <= state.strikes[t]) el.classList.add('active');
+                    else el.classList.remove('active');
+                }
+            }
+        }
+
+        function nextRound() {
+            state.round++;
+            loadRound();
+        }
+
+        function endGame() {
+            document.getElementById('screen-game').style.display = 'none';
+            document.getElementById('screen-end').style.display = 'flex';
+            const s1 = state.scores[0];
+            const s2 = state.scores[1];
+            let msg = "";
+            if(s1 > s2) msg = `¡GANAN ${state.names[0].toUpperCase()}!`;
+            else if(s2 > s1) msg = `¡GANAN ${state.names[1].toUpperCase()}!`;
+            else msg = "¡EMPATE!";
+            
+            document.getElementById('winner-text').innerHTML = `${msg}<br><span style="color:#fff; font-size:1.5rem">${s1} - ${s2}</span>`;
+        }
+    </script>
+</body>
+</html>

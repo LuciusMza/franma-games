@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <link rel="manifest" href="manifest.json">
+    
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#1a1a1a">
+    
+    <title>Trato Hecho: Fiesta</title>
+    <style>
+        /* ESTILOS BASE */
+        body { margin: 0; height: 100vh; overflow: hidden; background: radial-gradient(circle, #1a1a1a, #000); color: #fff; font-family: sans-serif; display: flex; flex-direction: column; user-select: none; -webkit-tap-highlight-color: transparent; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+        
+        /* PANTALLAS */
+        .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; z-index: 10; }
+        .screen.active { display: flex; }
+
+        /* PORTADA */
+        h1 { font-size: 3.5rem; margin: 0; line-height: 1; text-align: center; background: linear-gradient(to bottom, #ffd700, #b8860b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 2px 0 rgba(0,0,0,0.5)); transition: transform 0.2s;}
+        
+        .highscore-box { margin-top: 20px; background: rgba(255, 215, 0, 0.1); border: 1px solid #ffd700; padding: 10px 20px; border-radius: 10px; text-align: center; }
+        .hs-label { font-size: 0.8rem; color: #aaa; text-transform: uppercase; letter-spacing: 1px; }
+        .hs-val { font-size: 1.5rem; color: #ffd700; font-weight: bold; }
+
+        .menu-btn { background: linear-gradient(45deg, #ffd700, #b8860b); color: #000; border: none; padding: 18px 50px; font-size: 1.5rem; font-weight: bold; border-radius: 50px; margin-top: 25px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.3); transition: transform 0.1s; }
+        .menu-btn:active { transform: scale(0.95); }
+        
+        .btn-small { background: transparent; border: 2px solid #aaa; color: #aaa; padding: 10px 20px; border-radius: 20px; margin-top: 15px; font-weight: bold; cursor: pointer; }
+
+        /* TABLERO */
+        #board-container { display: flex; height: 38vh; width: 100%; padding: 5px; justify-content: space-between; }
+        .side-col { width: 49%; display: flex; flex-direction: column; justify-content: space-evenly; }
+        .val-box { background: linear-gradient(90deg, #ffd700, #b8860b); color: #000; font-size: 0.8rem; text-align: center; border-radius: 4px; border: 1px solid rgba(255,255,255,0.3); padding: 2px; transition: 0.3s; }
+        .val-box.low { background: linear-gradient(90deg, #888, #aaa); color: #222; }
+        .val-box.out { opacity: 0.2; text-decoration: line-through; background: #333; color: #777; border:none; transform: scale(0.9); }
+
+        /* JUEGO */
+        #game-area { flex: 1; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #cases-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; width: 95%; max-width: 400px; padding: 10px; }
+        
+        .case-btn { aspect-ratio: 1.2; background: #444; border: 1px solid #aaa; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: #fff; cursor: pointer; position: relative; transition: transform 0.1s; }
+        .case-btn.selected { background: #ffd700; color: #000; border: 2px solid #fff; z-index: 20; }
+        .case-btn.opened { visibility: hidden; pointer-events: none; }
+        
+        /* ANIMACION SUSPENSO */
+        .shaking { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both infinite; border-color: #ffd700; background: #555; z-index: 50; }
+        @keyframes shake { 0% { transform: translate(0, 0) rotate(0deg); } 25% { transform: translate(5px, 5px) rotate(5deg); } 50% { transform: translate(0, 0) rotate(0eg); } 75% { transform: translate(-5px, 5px) rotate(-5deg); } 100% { transform: translate(0, 0) rotate(0deg); } }
+
+        /* MODALES */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 100; display: none; align-items: center; justify-content: center; flex-direction: column; text-align: center; }
+        .box { background: #222; padding: 25px; border-radius: 15px; border: 3px solid #ffd700; width: 90%; max-width: 350px; max-height: 85vh; overflow-y: auto; box-shadow: 0 0 50px rgba(255, 215, 0, 0.2); }
+        .btn-deal { width:100%; padding:15px; margin:5px 0; border:none; font-weight:bold; font-size:1.2rem; border-radius:8px; cursor:pointer; color: white; background: #4caf50; }
+        .btn-no { width:100%; padding:15px; margin:5px 0; border:none; font-weight:bold; font-size:1.2rem; border-radius:8px; cursor:pointer; color: white; background: #f44336; }
+
+        /* CAJA DE PRENDA */
+        .penalty-box { margin-top: 15px; padding: 15px; background: rgba(244, 67, 54, 0.2); border: 2px dashed #f44336; border-radius: 10px; animation: pulse 2s infinite; display: none; }
+        .penalty-title { color: #f44336; font-weight: bold; font-size: 1.2rem; text-transform: uppercase; margin-bottom: 5px; }
+        .penalty-desc { font-size: 1.1rem; color: #fff; font-weight: bold; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
+
+        /* ANIMACIONES REVELACION */
+        .good-val { color: #00ff00 !important; animation: pop 0.5s; }
+        .bad-val { color: #ff3333 !important; animation: pop 0.5s; }
+        @keyframes pop { 0% { transform: scale(0); } 80% { transform: scale(1.3); } 100% { transform: scale(1); } }
+        
+        /* SWITCH PARA PRENDAS */
+        .switch-btn { background: #333; color: #888; border: 1px solid #555; padding: 5px 15px; border-radius: 10px; cursor: pointer; }
+        .switch-btn.on { background: #f44336; color: white; border-color: #f44336; }
+        
+        /* AJUSTES */
+        .row { display: flex; justify-content: space-between; width: 100%; margin: 15px 0; font-size: 1.2rem; align-items: center; }
+        .t-btn { background: #333; color: #fff; border: 1px solid #555; padding: 5px 15px; border-radius: 10px; cursor: pointer; }
+        .t-btn.active { background: #ffd700; color: #000; border-color: #ffd700; }
+        .t-step { text-align: left; margin-bottom: 20px; border-bottom: 1px solid #444; padding-bottom: 10px; color: #fff; font-size: 0.95rem; line-height: 1.4; }
+        .t-head { color: #ffd700; font-weight: bold; display: block; margin-bottom: 5px; text-transform: uppercase; font-size: 1rem; }
+    </style>
+</head>
+<body>
+
+    <div id="screen-home" class="screen active">
+        <h1 data-t="title">TRATO<br>HECHO</h1>
+        <p style="color:#aaa; font-weight:bold; letter-spacing: 2px;" data-t="sub">MODO FIESTA</p>
+        
+        <div class="highscore-box">
+            <div class="hs-label" data-t="record">RÉCORD</div>
+            <div class="hs-val" id="hs-display">$0</div>
+        </div>
+
+        <button class="menu-btn" onclick="startGame()" data-t="play">JUGAR</button>
+        <div style="margin-top: 15px; font-size: 0.8rem; color: #888;">
+            PRENDAS: <span id="penalty-status" style="font-weight:bold; color:#f44336">ACTIVADAS</span>
+        </div>
+        <button class="btn-small" style="margin-top:10px; border:none; opacity:0.7" onclick="showSettings()" data-t="opts">OPCIONES</button>
+    </div>
+
+    <div id="screen-settings" class="screen">
+        <div class="box">
+            <h2 style="margin-top:0; color:#ffd700;" data-t="opts">OPCIONES</h2>
+            <div class="row">
+                <span>Modo Prendas</span>
+                <button class="switch-btn on" id="btn-penalty" onclick="togglePenalty()">ON</button>
+            </div>
+            <div class="row"><span data-t="lang">Idioma</span><div><button class="t-btn active" id="btn-es" onclick="setLang('es')">ES</button><button class="t-btn" id="btn-en" onclick="setLang('en')">EN</button></div></div>
+            <button class="btn-small" style="width:100%; border: 2px solid #ffd700; color: #ffd700; margin-top:20px;" onclick="toggleFS()">🖥️ PANTALLA COMPLETA</button>
+            <button class="btn-small" style="width:100%; border: 2px solid #f44336; color: #f44336; margin-top:10px;" onclick="resetScore()">🗑️ BORRAR RÉCORD</button>
+            <button class="menu-btn" onclick="showHome()" data-t="back" style="font-size:1rem; padding:10px 30px;">VOLVER</button>
+        </div>
+    </div>
+
+    <div id="modal-help" class="modal" onclick="if(event.target==this) this.style.display='none'">
+        <div class="box">
+            <h2 data-t="how_to" style="margin-top:0; border-bottom: 2px solid #ffd700; padding-bottom: 10px; color: #ffd700;">INSTRUCCIONES</h2>
+            <div class="t-step"><span class="t-head" data-t="s1_t">...</span><span data-t="s1_d">...</span></div>
+            <div class="t-step"><span class="t-head" data-t="s2_t">...</span><span data-t="s2_d">...</span></div>
+            <div class="t-step"><span class="t-head" data-t="s3_t">...</span><span data-t="s3_d">...</span></div>
+            <button class="menu-btn" style="font-size:1rem; padding:10px 30px; margin-top:0;" onclick="document.getElementById('modal-help').style.display='none'" data-t="ok">ENTENDIDO</button>
+        </div>
+    </div>
+
+    <div id="screen-game" class="screen">
+        <div id="board-container"><div class="side-col" id="col-L"></div><div class="side-col" id="col-R"></div></div>
+        <div id="game-area">
+            <div id="msg" style="color:#ffd700; font-weight:bold; margin-bottom:10px; text-transform:uppercase; text-align: center; font-size: 0.9rem;">...</div>
+            <div id="cases-grid"></div>
+            <div id="my-ui" style="display:none; flex-direction:column; align-items:center; margin-top:15px;"><span style="font-size:0.8rem; color:#aaa;" data-t="your_case">TU MALETIN</span><div class="case-btn selected" id="my-case-disp" style="width:60px; height:50px;">?</div></div>
+        </div>
+    </div>
+
+    <div id="modal-rev" class="modal" onclick="closeReveal()"><h3 style="color:#aaa" data-t="case_has">CONTENIDO</h3><div id="rev-val" style="font-family:sans-serif; font-weight:bold; font-size:4rem;">$0</div><p style="opacity:0.6; color:#fff">(Toca para seguir)</p></div>
+    <div id="modal-bank" class="modal"><div class="box"><h3 style="margin:0; color:#aaa" data-t="offer">OFERTA</h3><h1 id="bank-val" style="font-size:3rem; margin:10px 0; color:#fff;">$0</h1><button class="btn-deal" onclick="doDeal(true)" data-t="deal">TRATO HECHO</button><button class="btn-nodeal" onclick="doDeal(false)" data-t="nodeal">NO HAY TRATO</button></div></div>
+    
+    <div id="modal-end" class="modal">
+        <div class="box">
+            <h1 id="end-tit" style="font-size:2rem; margin:0; color:#ffd700">FINAL</h1>
+            <div id="end-val" style="font-family:sans-serif; font-weight:bold; font-size:3rem; color:#fff; margin:10px 0;">$0</div>
+            
+            <p id="end-msg" style="color:#ccc; margin:10px 0;">...</p>
+
+            <div id="penalty-display" class="penalty-box">
+                <div class="penalty-title">⚠️ CASTIGO ⚠️</div>
+                <div class="penalty-desc" id="penalty-text">...</div>
+            </div>
+
+            <button class="menu-btn" onclick="showHome()" data-t="back">VOLVER</button>
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURACION DE DIFICULTAD
+        const SAFETY_THRESHOLD = 15000; // Si ganas menos de esto, ¡PRENDA!
+
+        // LISTA DE PRENDAS
+        const PENALTIES = [
+            "Baila sin música 30 seg.", "Fondo blanco a tu bebida.", "Deja que lean tu último chat.",
+            "Sube una selfie vergonzosa.", "Imita a un animal a elección.", "Haz 10 flexiones de brazo.",
+            "Habla con acento extranjero.", "Confiesa tu mayor vergüenza.", "Haz un baile de TikTok.", "Déjate maquillar por el grupo."
+        ];
+
+        const AudioSys = {
+            ctx: null,
+            init: function() { if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); if(this.ctx.state === 'suspended') this.ctx.resume(); },
+            play: function(type) {
+                if(!this.ctx) return;
+                const t = this.ctx.currentTime; const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+                osc.connect(gain); gain.connect(this.ctx.destination);
+                if (type === 'click') { osc.frequency.setValueAtTime(800, t); osc.frequency.exponentialRampToValueAtTime(300, t+0.1); gain.gain.setValueAtTime(0.1, t); gain.gain.exponentialRampToValueAtTime(0.01, t+0.1); osc.start(t); osc.stop(t+0.1); } 
+                else if (type === 'suspense') { osc.type='sawtooth'; osc.frequency.setValueAtTime(100, t); osc.frequency.linearRampToValueAtTime(50, t+0.8); gain.gain.setValueAtTime(0.1, t); gain.gain.linearRampToValueAtTime(0, t+0.8); osc.start(t); osc.stop(t+0.8); }
+                else if (type === 'good') { osc.type='sine'; osc.frequency.setValueAtTime(1000, t); osc.frequency.exponentialRampToValueAtTime(2000, t+0.1); gain.gain.setValueAtTime(0.1, t); gain.gain.linearRampToValueAtTime(0, t+0.5); osc.start(t); osc.stop(t+0.5); }
+                else if (type === 'bad') { osc.type='square'; osc.frequency.setValueAtTime(150, t); osc.frequency.exponentialRampToValueAtTime(40, t+0.4); gain.gain.setValueAtTime(0.2, t); gain.gain.exponentialRampToValueAtTime(0.01, t+0.4); osc.start(t); osc.stop(t+0.4); }
+                else if (type === 'phone') { osc.type='triangle'; osc.frequency.setValueAtTime(600, t); osc.frequency.setValueAtTime(800, t+0.05); gain.gain.value=0.1; osc.start(t); osc.stop(t+0.3); }
+                else if (type === 'win') { osc.type='sine'; osc.frequency.setValueAtTime(400, t); osc.frequency.linearRampToValueAtTime(800, t+0.3); gain.gain.setValueAtTime(0.1, t); osc.start(t); osc.stop(t+0.6); }
+            }
+        };
+
+        var LANGS={es:{title:"TRATO<br>HECHO",sub:"MODO FIESTA",play:"JUGAR",opts:"OPCIONES",record:"RÉCORD",pick:"ELIGE TU MALETIN",open:"ABRE",case_s:"MALETIN",case_p:"MALETINES",case_has:"EL MALETIN TENIA",offer:"OFERTA BANCO",deal:"TRATO HECHO",nodeal:"NO HAY TRATO",win:"GANASTE",sold:"¡VENDIDO!",good:"¡Buen negocio!",bad:"¡Valia mas!",back:"VOLVER",lang:"Idioma",your_case:"TU MALETIN",s1_t:"1. OBJETIVO",s1_d:"Gana más de $15,000 para salvarte.",s2_t:"2. RIESGO",s2_d:"Si ganas menos de $15,000 (ya sea vendiendo o jugando), recibes una PRENDA.",s3_t:"3. BANCO",s3_d:"Cuidado: Aceptar una oferta baja por miedo te garantiza un castigo."},en:{title:"DEAL OR<br>NO DEAL",sub:"PARTY MODE",play:"PLAY",opts:"SETTINGS",record:"RECORD",pick:"PICK YOUR CASE",open:"OPEN",case_s:"CASE",case_p:"CASES",case_has:"CASE CONTAINED",offer:"BANK OFFER",deal:"DEAL",nodeal:"NO DEAL",win:"YOU WON",sold:"SOLD!",good:"Great deal!",bad:"It was worth more!",back:"BACK",lang:"Language",your_case:"YOUR CASE",s1_t:"1. GOAL",s1_d:"Win more than $15,000 to be safe.",s2_t:"2. RISK",s2_d:"Win less than $15,000 and you get a PENALTY.",s3_t:"3. BANKER",s3_d:"Careful: Taking a low offer means instant punishment."}};
+        var VALS=[1,5,10,25,50,75,100,200,300,400,1000,5000,10000,25000,50000,75000,100000,200000,500000,1000000];
+        var ROUNDS=[5,4,3,3,2,1,1];
+        var state={lang:'es',active:false,penaltyMode:true};
+        var game={cases:[],myIdx:-1,round:0,toOpen:0,offer:0};
+
+        function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');updateHighscoreDisplay();}
+        function showHome(){showScreen('screen-home');document.getElementById('modal-end').style.display='none';}
+        function showSettings(){showScreen('screen-settings');}
+        function showInstruct(){document.getElementById('modal-help').style.display='flex';}
+        function setLang(l){state.lang=l;document.getElementById('btn-es').className=l==='es'?'t-btn active':'t-btn';document.getElementById('btn-en').className=l==='en'?'t-btn active':'t-btn';updateText();}
+        function updateText(){var T=LANGS[state.lang];document.querySelectorAll('[data-t]').forEach(el=>{var k=el.getAttribute('data-t');if(T[k])el.innerHTML=T[k];});if(state.active)updateInstruct();}
+        function toggleFS(){var d=document.documentElement;if(!document.fullscreenElement){d.requestFullscreen().catch(e=>alert("Requiere gesto previo."));}else{document.exitFullscreen();}}
+
+        function togglePenalty() {
+            state.penaltyMode = !state.penaltyMode;
+            var btn = document.getElementById('btn-penalty');
+            var status = document.getElementById('penalty-status');
+            if(state.penaltyMode) { btn.className = "switch-btn on"; btn.innerText = "ON"; status.innerText = "ACTIVADAS"; status.style.color = "#f44336"; } 
+            else { btn.className = "switch-btn"; btn.innerText = "OFF"; status.innerText = "DESACTIVADAS"; status.style.color = "#888"; }
+        }
+        function getPenalty() { return PENALTIES[Math.floor(Math.random() * PENALTIES.length)]; }
+
+        function getHighscore(){ return parseInt(localStorage.getItem('trato_hs') || '0'); }
+        function saveHighscore(score){ if(score > getHighscore()){ localStorage.setItem('trato_hs', score); return true; } return false; }
+        function resetScore(){ if(confirm("¿Borrar récord?")){ localStorage.setItem('trato_hs', '0'); showHome(); } }
+        function updateHighscoreDisplay(){ document.getElementById('hs-display').innerText = '$' + getHighscore().toLocaleString(); }
+
+        function startGame(){
+            AudioSys.init(); AudioSys.play('click');
+            game={cases:[],myIdx:-1,round:0,toOpen:ROUNDS[0],offer:0};state.active=true;
+            var v=[...VALS].sort(()=>Math.random()-0.5);
+            game.cases=v.map((val,i)=>({id:i+1,val:val,open:false}));
+            
+            var L=document.getElementById('col-L'),R=document.getElementById('col-R');L.innerHTML='';R.innerHTML='';
+            VALS.forEach((val,i)=>{var d=document.createElement('div');d.className='val-box '+(val<1000?'low':'');d.id='v-'+val;d.innerText='$'+val.toLocaleString();(i<VALS.length/2?L:R).appendChild(d);});
+            
+            var g=document.getElementById('cases-grid');g.innerHTML='';
+            game.cases.forEach((c,i)=>{var b=document.createElement('div');b.className='case-btn';b.id='c-'+i;b.innerText=c.id;b.onclick=()=>clickCase(i);g.appendChild(b);});
+            
+            document.getElementById('my-ui').style.display='none';document.getElementById('my-case-disp').innerText='?';
+            updateInstruct();showScreen('screen-game');
+        }
+
+        function updateInstruct(){var T=LANGS[state.lang];var txt=document.getElementById('msg');if(game.myIdx===-1)txt.innerHTML=T.pick;else{var lbl=game.toOpen>1?T.case_p:T.case_s;txt.innerHTML=T.open+' '+game.toOpen+' '+lbl;}}
+        
+        function clickCase(i){
+            if(!state.active||game.cases[i].open)return;
+            if(game.myIdx===-1){AudioSys.play('good');game.myIdx=i;document.getElementById('c-'+i).classList.add('opened');document.getElementById('my-ui').style.display='flex';document.getElementById('my-case-disp').innerText=game.cases[i].id;updateInstruct();return;}
+            if(i===game.myIdx)return;
+            
+            var btn = document.getElementById('c-'+i);
+            AudioSys.play('suspense'); btn.classList.add('shaking');
+            
+            setTimeout(function() {
+                btn.classList.remove('shaking');
+                var c=game.cases[i];c.open=true;game.toOpen--;
+                btn.classList.add('opened');
+                document.getElementById('v-'+c.val).classList.add('out');
+                var revBox = document.getElementById('rev-val');
+                revBox.innerText='$'+c.val.toLocaleString();
+                if(c.val < 1000) { AudioSys.play('good'); revBox.className = 'good-val'; } else { AudioSys.play('bad'); revBox.className = 'bad-val'; }
+                document.getElementById('modal-rev').style.display='flex';
+            }, 800);
+        }
+
+        function closeReveal(){
+            document.getElementById('modal-rev').style.display='none';
+            if(game.toOpen===0)showBanker();
+            else{var left=game.cases.filter(c=>!c.open).length;if(left<2)finish(game.cases[game.myIdx].val,false);else updateInstruct();}
+        }
+
+        function showBanker(){
+            setTimeout(function(){ AudioSys.play('phone'); }, 300);
+            var rem=game.cases.filter(c=>!c.open).map(c=>c.val);var avg=rem.reduce((a,b)=>a+b,0)/rem.length;
+            game.offer=Math.floor(avg*(0.2+(game.round*0.12)));
+            document.getElementById('bank-val').innerText='$'+game.offer.toLocaleString();document.getElementById('modal-bank').style.display='flex';
+        }
+
+        function doDeal(d){
+            AudioSys.play('click'); document.getElementById('modal-bank').style.display='none';
+            if(d)finish(game.offer,true);
+            else{game.round++;if(game.round>=ROUNDS.length)finish(game.cases[game.myIdx].val,false);else{game.toOpen=ROUNDS[game.round];updateInstruct();}}
+        }
+
+        function finish(amt,sold){
+            AudioSys.play('win');
+            state.active=false;var T=LANGS[state.lang];var my=game.cases[game.myIdx].val;
+            
+            document.getElementById('end-tit').innerHTML=sold?T.sold:T.win;
+            document.getElementById('end-val').innerText='$'+amt.toLocaleString();
+            saveHighscore(amt);
+            
+            var m = sold?(amt>my?T.good:T.bad):T.deal;
+            
+            // LOGICA DE PRENDA (SI ES MENOS DE 15.000)
+            var pBox = document.getElementById('penalty-display');
+            var pText = document.getElementById('penalty-text');
+            
+            if(state.penaltyMode && amt < SAFETY_THRESHOLD) {
+                pBox.style.display = 'block';
+                pText.innerText = getPenalty();
+                AudioSys.play('bad');
+                m = "¡PERDISTE! NO LLEGASTE A $15,000";
+            } else {
+                pBox.style.display = 'none';
+            }
+            
+            document.getElementById('end-msg').innerHTML=m;
+            document.getElementById('modal-end').style.display='flex';
+        }
+        
+        window.onload = function() { updateText(); updateHighscoreDisplay(); };
+    </script>
+</body>
+</html>

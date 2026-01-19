@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, viewport-fit=cover">
+    <title>Tick Tock Boom</title>
+
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ff3b30">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Poppins:wght@400;700;900&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --font-display: 'Black Ops One', 'Impact', sans-serif;
+            --font-body: 'Poppins', sans-serif;
+            --bg-radial-1: #1a1a1a; --bg-radial-2: #000000;
+            --text-main: #ffffff; --text-sec: #bbbbbb;
+            --glass-bg: rgba(30, 30, 30, 0.85); --glass-border: rgba(255, 255, 255, 0.15);
+            --accent: #ff3b30; --card-bg: #ffffff; --card-text: #000000;
+        }
+
+        body.light-theme {
+            --bg-radial-1: #f0f0f0; --bg-radial-2: #dcdcdc;
+            --text-main: #1a1a1a; --text-sec: #444444;
+            --glass-bg: rgba(255, 255, 255, 0.75); --glass-border: rgba(0, 0, 0, 0.1);
+            --card-bg: #1a1a1a; --card-text: #ffffff;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+        body { margin: 0; height: 100vh; overflow: hidden; background: radial-gradient(circle at center, var(--bg-radial-1) 0%, var(--bg-radial-2) 100%); color: var(--text-main); font-family: var(--font-body); display: flex; flex-direction: column; align-items: center; justify-content: center; transition: background 0.3s, color 0.3s; }
+
+        /* TOUCH FIX */
+        #particles, .bomb-svg, .footer-brand { pointer-events: none; }
+        button, .glass-panel, .syllable-card { pointer-events: auto; position: relative; z-index: 50; }
+
+        /* UI ELEMENTS */
+        #particles { position: fixed; top:0; left:0; width:100%; height:100%; z-index: 0; }
+        .screen { display: none; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; padding: 20px; z-index: 10; }
+        .screen.active { display: flex; }
+
+        .glass-panel { background: var(--glass-bg); backdrop-filter: blur(10px); border: 1px solid var(--glass-border); border-radius: 25px; padding: 25px; text-align: center; width: 100%; max-width: 360px; box-shadow: 0 15px 40px rgba(0,0,0,0.3); display: flex; flex-direction: column; align-items: center; }
+
+        h1 { 
+            font-family: var(--font-display); font-size: 3.8rem; margin: 0 0 15px 0; line-height: 0.9; text-align: center; width: 100%;
+            background: linear-gradient(to bottom, var(--text-main) 40%, var(--accent)); 
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
+            filter: drop-shadow(0 0 20px rgba(255,59,48,0.4)); 
+        }
+
+        .bomb-svg { width: 160px; height: auto; margin: 10px auto; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3)); }
+        .spark-svg { animation: flicker 0.1s infinite; transform-origin: center; opacity: 0; }
+        .ticking .spark-svg { opacity: 1; }
+        .ticking .bomb-body { animation: gentlePulse 0.5s infinite alternate; transform-origin: bottom center; }
+
+        .syllable-card { background: var(--card-bg); color: var(--card-text); font-family: var(--font-body); font-weight: 900; font-size: 3.5rem; padding: 20px; border-radius: 20px; width: 100%; text-align: center; box-shadow: 0 5px 25px rgba(0,0,0,0.2); margin: 20px 0; border: 4px solid var(--card-bg); text-transform: uppercase; line-height: 1.1; word-break: break-word; transition: transform 0.2s; }
+
+        .btn-main { background: linear-gradient(to right, #ff3b30, #ff9500); border: none; padding: 18px; width: 100%; border-radius: 15px; color: white; font-weight: 800; font-size: 1.4rem; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 5px 20px rgba(255, 59, 48, 0.4); margin-top: 10px; cursor: pointer; transition: transform 0.1s; }
+        .btn-main:active { transform: scale(0.96); }
+        
+        /* Botones de Modo (Gigantes) */
+        .btn-mode { 
+            background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.1); 
+            padding: 25px; width: 100%; border-radius: 20px; margin-bottom: 15px;
+            color: var(--text-main); font-size: 1.5rem; font-weight: 800; text-transform: uppercase;
+            cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+        .btn-mode:active { background: rgba(255,255,255,0.2); transform: scale(0.98); }
+        .btn-mode span { font-size: 2rem; }
+
+        .btn-secondary { background: rgba(128,128,128,0.2); border: 1px solid var(--text-sec); color: var(--text-main); padding: 12px; border-radius: 12px; width: 100%; margin-top: 10px; font-weight: 600; cursor: pointer; }
+        .btn-settings { position: absolute; top: 20px; right: 20px; z-index: 200; background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--text-main); width: 45px; height: 45px; border-radius: 50%; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .btn-back { position: absolute; top: 20px; left: 20px; z-index: 200; background: none; border: none; color: var(--text-sec); font-size: 1.5rem; cursor: pointer; padding: 10px; }
+
+        .footer-brand { position: absolute; bottom: 15px; width: 100%; text-align: center; font-size: 0.8rem; color: var(--text-sec); opacity: 0.6; font-weight: 600; letter-spacing: 1px; z-index: 5; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        
+        /* AJUSTES */
+        .setting-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; width: 100%; font-size: 0.95rem; }
+        .switch { position: relative; width: 50px; height: 28px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #555; border-radius: 34px; transition: .4s; }
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; border-radius: 50%; transition: .4s; }
+        input:checked + .slider { background-color: var(--accent); } input:checked + .slider:before { transform: translateX(22px); }
+        .selector-group { display: flex; background: rgba(0,0,0,0.2); padding: 4px; border-radius: 10px; width: 100%; margin-top: 5px; }
+        .selector-btn { flex: 1; background: none; border: none; color: var(--text-sec); padding: 8px; font-weight: 700; font-size: 0.8rem; border-radius: 8px; transition: 0.2s; }
+        .selector-btn.active { background: var(--accent); color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+
+        @keyframes flicker { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.7; transform: scale(1.3); } }
+        @keyframes gentlePulse { from { transform: scale(1); } to { transform: scale(1.05); } }
+        @keyframes shakeBoom { 0%,100% { transform: translate(0,0); } 25% { transform: translate(-4px, 4px); } 75% { transform: translate(4px, -4px); } }
+        @keyframes pulseRedBg { from { background: radial-gradient(circle, #330000, #000); } to { background: radial-gradient(circle, #660000, #000); } }
+    </style>
+</head>
+<body>
+    <div id="particles"></div>
+    <button class="btn-settings" onclick="openModal('modal-settings')">⚙️</button>
+    <div class="footer-brand">FranMa Games</div>
+
+    <div id="main-container">
+        <div id="screen-start" class="screen active">
+            <h1>TICK TOCK<br>BOOM</h1>
+            <svg class="bomb-svg" viewBox="0 0 200 200">
+                <g class="bomb-body"><circle cx="100" cy="115" r="65" fill="#333" stroke="#111" stroke-width="3"/><path d="M85 105 L115 105 L115 125 L85 125 Z" fill="#222"/><text x="100" y="125" font-family="Arial" font-size="30" fill="#ff3b30" text-anchor="middle" opacity="0.8" dy="10">☠️</text></g>
+                <path d="M100 50 Q 120 20, 140 40" stroke="#8B4513" stroke-width="6" fill="none"/><circle class="spark-svg" cx="140" cy="40" r="8" fill="#ffcc00"/>
+            </svg>
+            <button class="btn-main" id="btn-start" onclick="showModeSelect()">INICIAR</button>
+            <button class="btn-secondary" id="btn-help" onclick="openModal('modal-help')">AYUDA</button>
+        </div>
+
+        <div id="screen-mode" class="screen">
+            <button class="btn-back" onclick="showStart()">←</button>
+            <h2 id="lbl-choose-mode" style="margin-bottom: 30px; font-family: var(--font-display); font-size: 2rem;">ELIGE MODO</h2>
+            
+            <button class="btn-mode" onclick="setModeAndStart('syllables')">
+                <span>🔤</span> <div id="btn-mode-syl">SÍLABAS</div>
+            </button>
+            
+            <button class="btn-mode" onclick="setModeAndStart('categories')">
+                <span>🧠</span> <div id="btn-mode-cat">TEMAS</div>
+            </button>
+        </div>
+
+        <div id="screen-game" class="screen">
+            <div style="transform: scale(0.6); margin-top: -20px;">
+                <svg class="bomb-svg ticking" viewBox="0 0 200 200">
+                    <g class="bomb-body"><circle cx="100" cy="115" r="65" fill="#333" stroke="#111" stroke-width="3"/><path d="M85 105 L115 105 L115 125 L85 125 Z" fill="#222"/><text x="100" y="125" font-family="Arial" font-size="30" fill="#ff3b30" text-anchor="middle" opacity="0.8" dy="10">☠️</text></g>
+                    <path d="M100 50 Q 120 20, 140 40" stroke="#8B4513" stroke-width="6" fill="none"/><circle class="spark-svg" cx="140" cy="40" r="8" fill="#ffcc00"/>
+                </svg>
+            </div>
+            <p style="color: var(--accent); font-weight: bold; margin-bottom: 5px;" id="lbl-main-display">SÍLABA ACTUAL</p>
+            <div class="syllable-card" id="syllable-text">---</div>
+            <button class="btn-secondary" id="btn-cancel" onclick="stopGame()" style="margin-top: 30px; border-color: var(--accent); color: var(--accent); width: auto;">CANCELAR</button>
+        </div>
+
+        <div id="screen-boom" class="screen">
+            <div style="animation: shakeBoom 0.4s infinite;">
+                <h1 style="font-size: 5rem; text-shadow: 0 0 30px var(--text-main);">BOOM!</h1>
+                <p style="font-size: 2rem; font-weight: 900; margin-top: -15px;" id="lbl-lose">¡PERDISTE!</p>
+            </div>
+            <div class="glass-panel" style="margin-top: 40px; border-color: var(--accent); background: rgba(50,0,0,0.8);">
+                <p style="margin-bottom: 10px; color: #fff;" id="lbl-was">Era:</p>
+                <div class="syllable-card" id="boom-syllable" style="font-size: 2.5rem; padding: 15px; margin: 10px 0; border: 2px solid var(--accent); color: var(--accent); box-shadow: none; background: #fff;">---</div>
+                <button class="btn-main" id="btn-retry" onclick="startGame()">OTRA VEZ</button>
+            </div>
+            <button class="btn-secondary" id="btn-home" onclick="showStart()" style="margin-top: 20px; width: auto;">INICIO</button>
+        </div>
+    </div>
+
+    <div id="modal-help" class="modal-overlay" onclick="if(event.target===this) closeModal('modal-help')">
+        <div class="glass-panel" style="text-align: left;">
+            <h2 style="margin-top:0; color: var(--accent);" id="lbl-help-title">CÓMO JUGAR</h2>
+            <ul style="padding-left: 20px; line-height: 1.6; color: var(--text-main); font-size: 0.9rem;" id="help-list"></ul>
+            <button class="btn-main" onclick="closeModal('modal-help')" id="btn-ok">¡ENTENDIDO!</button>
+        </div>
+    </div>
+
+    <div id="modal-settings" class="modal-overlay" onclick="if(event.target===this) closeModal('modal-settings')">
+        <div class="glass-panel" style="width: 90%; max-width: 320px;">
+            <h2 style="margin-top:0;" id="lbl-settings">AJUSTES</h2>
+
+            <div class="setting-row"><span id="lbl-sound">🔊 Sonido</span><label class="switch"><input type="checkbox" checked onchange="CFG.sound=this.checked"><span class="slider"></span></label></div>
+            <div class="setting-row"><span id="lbl-vibe">📳 Vibración</span><label class="switch"><input type="checkbox" checked onchange="CFG.vibe=this.checked"><span class="slider"></span></label></div>
+            
+            <div class="setting-row" style="margin-top:15px;">
+                <span id="lbl-theme">🌗 Tema</span>
+                <div style="display: flex; gap: 10px;">
+                    <button class="selector-btn active" id="theme-dark" onclick="setTheme('dark')">Dark</button>
+                    <button class="selector-btn" id="theme-light" onclick="setTheme('light')">Light</button>
+                </div>
+            </div>
+            <div class="setting-row">
+                <span id="lbl-lang">🌐 Idioma</span>
+                <div style="display: flex; gap: 10px;">
+                    <button class="selector-btn active" id="lang-es" onclick="setLang('es')">ES</button>
+                    <button class="selector-btn" id="lang-en" onclick="setLang('en')">EN</button>
+                </div>
+            </div>
+
+            <div style="width: 100%; margin-top: 15px;">
+                <p style="margin-bottom: 5px; font-weight: bold; font-size: 0.9rem;" id="lbl-diff">⚠️ Dificultad</p>
+                <div class="selector-group">
+                    <button class="selector-btn" id="diff-easy" onclick="setDiff('easy')">Fácil</button>
+                    <button class="selector-btn active" id="diff-normal" onclick="setDiff('normal')">Normal</button>
+                    <button class="selector-btn" id="diff-hard" onclick="setDiff('hard')">Difícil</button>
+                </div>
+            </div>
+            <button class="btn-secondary" onclick="closeModal('modal-settings')" style="margin-top: 20px;" id="btn-close">CERRAR</button>
+        </div>
+    </div>
+
+    <script>
+        const CFG = { sound: true, vibe: true, diff: 'normal', lang: 'es', mode: 'syllables' };
+        
+        const DIFF_TIMES = { easy: [30, 60], normal: [20, 45], hard: [10, 25] };
+
+        const DATA = {
+            syllables: {
+                es: ["TRE", "PLA", "CON", "BER", "PAR", "SOL", "BRA", "CION", "MER", "CAN", "VER", "TER", "FLA", "CRI", "MAN", "SAN", "GAR", "TOR", "BLA", "RES", "LIN", "MAR", "CAR", "DOR", "VEN", "GOL", "TRA", "FOR", "GRA", "POR", "PRO", "COR", "CLA", "EST"],
+                en: ["ING", "TER", "EST", "TION", "ATI", "VER", "CON", "COM", "FOR", "PRO", "THE", "AND", "WIT", "ENT", "STR", "ALL", "STA", "MIN", "MAX", "OVE", "UND", "OUT", "SUB", "SUR", "INT", "TRA", "DIS", "PRE", "RE", "UN"]
+            },
+            categories: {
+                es: ["Animales", "Países", "Marcas", "Comidas", "Deportes", "Películas", "Profesiones", "En el Baño", "En la Cocina", "Superhéroes", "Frutas", "Colores", "Partes del cuerpo", "Ropa", "Instrumentos", "Transportes", "Videojuegos", "Cosas Redondas", "Cosas Frías", "Famosos", "Bandas", "Ciudades", "Apps", "Sabores de Pizza", "Cosas que vuelan", "Cosas de Madera", "En la Playa", "Nombres de Mujer", "Nombres de Hombre", "Villanos"],
+                en: ["Animals", "Countries", "Brands", "Foods", "Sports", "Movies", "Jobs", "In Bathroom", "In Kitchen", "Superheroes", "Fruits", "Colors", "Body Parts", "Clothes", "Instruments", "Vehicles", "Video Games", "Round Things", "Cold Things", "Celebrities", "Bands", "Cities", "Apps", "Pizza Toppings", "Things that fly", "Wooden Things", "At the Beach", "Female Names", "Male Names", "Villains"]
+            }
+        };
+
+        const TEXTS = {
+            es: {
+                start: "INICIAR", help: "AYUDA", retry: "OTRA VEZ", home: "INICIO", cancel: "CANCELAR", ok: "¡ENTENDIDO!", close: "CERRAR",
+                lose: "¡PERDISTE!", was: "Era:",
+                helpTitle: "CÓMO JUGAR", settingsTitle: "AJUSTES", chooseMode: "ELIGE MODO",
+                lblSound: "🔊 Sonido", lblVibe: "📳 Vibración", lblTheme: "🌗 Tema", lblLang: "🌐 Idioma", lblDiff: "⚠️ Dificultad",
+                diffNames: { easy: "Fácil", normal: "Normal", hard: "Difícil" },
+                modeNames: { syl: "SÍLABAS", cat: "TEMAS" },
+                labels: { syllables: "SÍLABA ACTUAL", categories: "TEMA ACTUAL" },
+                helpLists: {
+                    syllables: `<li>Aparece una sílaba (ej: <b>TRE</b>).</li><li>Di una palabra (ej: <b>TRE</b>N).</li><li>Pasa el celular rápido.</li><li>¡Si explota en tu mano, pierdes!</li>`,
+                    categories: `<li>Aparece un tema (ej: <b>MARCAS</b>).</li><li>Di algo de ese tema (ej: <b>NIKE</b>).</li><li>No puedes repetir palabras.</li><li>¡Pasa el celular rápido!</li>`
+                }
+            },
+            en: {
+                start: "START", help: "HELP", retry: "RETRY", home: "HOME", cancel: "CANCEL", ok: "GOT IT!", close: "CLOSE",
+                lose: "YOU LOST!", was: "It was:",
+                helpTitle: "HOW TO PLAY", settingsTitle: "SETTINGS", chooseMode: "CHOOSE MODE",
+                lblSound: "🔊 Sound", lblVibe: "📳 Vibrate", lblTheme: "🌗 Theme", lblLang: "🌐 Language", lblDiff: "⚠️ Difficulty",
+                diffNames: { easy: "Easy", normal: "Normal", hard: "Hard" },
+                modeNames: { syl: "SYLLABLES", cat: "TOPICS" },
+                labels: { syllables: "CURRENT SYLLABLE", categories: "CURRENT TOPIC" },
+                helpLists: {
+                    syllables: `<li>A syllable appears (e.g., <b>TRE</b>).</li><li>Say a word with it (e.g., <b>TRE</b>E).</li><li>Pass the phone quickly.</li><li>If it booms in your hand, you lose!</li>`,
+                    categories: `<li>A topic appears (e.g., <b>BRANDS</b>).</li><li>Say something fitting (e.g., <b>NIKE</b>).</li><li>No repeating words.</li><li>Pass the phone quickly!</li>`
+                }
+            }
+        };
+
+        let gameState = { timer: null, active: false, timeLeft: 0, totalTime: 0 };
+        let audioCtx = null;
+
+        function updateUI() {
+            const t = TEXTS[CFG.lang];
+            
+            const ids = {
+                'btn-start': t.start, 'btn-help': t.help, 'btn-retry': t.retry, 'btn-home': t.home, 'btn-cancel': t.cancel, 
+                'btn-ok': t.ok, 'btn-close': t.close, 'lbl-lose': t.lose, 'lbl-was': t.was, 'lbl-choose-mode': t.chooseMode,
+                'lbl-help-title': t.helpTitle, 'lbl-settings': t.settingsTitle, 'lbl-sound': t.lblSound, 
+                'lbl-vibe': t.lblVibe, 'lbl-theme': t.lblTheme, 'lbl-lang': t.lblLang, 'lbl-diff': t.lblDiff, 
+                'diff-easy': t.diffNames.easy, 'diff-normal': t.diffNames.normal, 'diff-hard': t.diffNames.hard,
+                'btn-mode-syl': t.modeNames.syl, 'btn-mode-cat': t.modeNames.cat
+            };
+            for (const [id, text] of Object.entries(ids)) if(document.getElementById(id)) document.getElementById(id).innerText = text;
+
+            document.getElementById('lbl-main-display').innerText = t.labels[CFG.mode];
+            document.getElementById('help-list').innerHTML = t.helpLists[CFG.mode];
+
+            document.getElementById('lang-es').className = CFG.lang === 'es' ? 'selector-btn active' : 'selector-btn';
+            document.getElementById('lang-en').className = CFG.lang === 'en' ? 'selector-btn active' : 'selector-btn';
+        }
+
+        function setLang(lang) { CFG.lang = lang; updateUI(); }
+        function setTheme(theme) {
+            document.body.className = theme === 'light' ? 'light-theme' : '';
+            document.getElementById('theme-dark').className = theme === 'dark' ? 'selector-btn active' : 'selector-btn';
+            document.getElementById('theme-light').className = theme === 'light' ? 'selector-btn active' : 'selector-btn';
+        }
+        function setDiff(d) {
+            CFG.diff = d;
+            ['easy', 'normal', 'hard'].forEach(lvl => document.getElementById('diff-'+lvl).className = lvl === d ? 'selector-btn active' : 'selector-btn');
+        }
+
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        
+        function showStart() { document.body.classList.remove('status-ticking', 'status-boom'); showScreen('screen-start'); }
+        function showModeSelect() { showScreen('screen-mode'); }
+
+        function initAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        function playSound(type) {
+            if (!CFG.sound || !audioCtx) return;
+            const o = audioCtx.createOscillator(), g = audioCtx.createGain(), now = audioCtx.currentTime;
+            if (type === 'tick') {
+                o.type = 'square'; o.frequency.setValueAtTime(600, now); o.frequency.exponentialRampToValueAtTime(100, now + 0.05);
+                g.gain.setValueAtTime(0.1, now); g.gain.linearRampToValueAtTime(0, now + 0.05);
+                o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(now + 0.05);
+            } else if (type === 'boom') {
+                o.type = 'sawtooth'; o.frequency.setValueAtTime(100, now); o.frequency.exponentialRampToValueAtTime(10, now + 1);
+                g.gain.setValueAtTime(0.5, now); g.gain.exponentialRampToValueAtTime(0.01, now + 1);
+                o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(now + 1);
+            }
+        }
+
+        function setModeAndStart(mode) {
+            CFG.mode = mode;
+            updateUI(); // Para actualizar los textos de ayuda y labels
+            startGame();
+        }
+
+        function startGame() {
+            initAudio();
+            const list = DATA[CFG.mode][CFG.lang];
+            const item = list[Math.floor(Math.random() * list.length)];
+            
+            document.getElementById('syllable-text').innerText = item;
+            document.getElementById('boom-syllable').innerText = item;
+            document.getElementById('syllable-text').style.fontSize = item.length > 10 ? '2.5rem' : '3.5rem';
+
+            const range = DIFF_TIMES[CFG.diff];
+            gameState.totalTime = Math.floor(Math.random() * (range[1] - range[0] + 1)) + range[0];
+            gameState.timeLeft = gameState.totalTime;
+            gameState.active = true;
+
+            showScreen('screen-game');
+            document.body.classList.add('status-ticking');
+
+            let nextTick = Date.now(), tickRate = 1000;
+            const loop = () => {
+                if (!gameState.active) return;
+                if (gameState.timeLeft <= 0) { explode(); return; }
+
+                if (Date.now() >= nextTick) {
+                    playSound('tick');
+                    const progress = 1 - (gameState.timeLeft / gameState.totalTime);
+                    tickRate = 1000 - (progress * 900); if (tickRate < 100) tickRate = 100;
+                    nextTick = Date.now() + tickRate;
+                    gameState.timeLeft -= (tickRate / 1000);
+                    if (CFG.vibe && navigator.vibrate) navigator.vibrate(20);
+                }
+                gameState.timer = requestAnimationFrame(loop);
+            };
+            cancelAnimationFrame(gameState.timer); loop();
+        }
+
+        function explode() {
+            gameState.active = false; cancelAnimationFrame(gameState.timer); playSound('boom');
+            if (CFG.vibe && navigator.vibrate) navigator.vibrate([500, 100, 500]);
+            document.body.classList.remove('status-ticking'); document.body.classList.add('status-boom');
+            setTimeout(() => { showScreen('screen-boom'); }, 800);
+        }
+
+        function stopGame() { gameState.active = false; cancelAnimationFrame(gameState.timer); showStart(); }
+
+        const pCont = document.getElementById('particles');
+        for(let i=0; i<20; i++) {
+            let p = document.createElement('div'); p.style.position='absolute'; p.style.left=Math.random()*100+'%'; p.style.top=Math.random()*100+'%';
+            p.style.opacity=0.2; p.style.fontSize=(Math.random()*20+10)+'px'; p.innerText=['💣','💥','⚡'][Math.floor(Math.random()*3)];
+            pCont.appendChild(p);
+        }
+
+        updateUI();
+    </script>
+</body>
+</html>

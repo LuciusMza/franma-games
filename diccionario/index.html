@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, viewport-fit=cover">
+    <title>Diccionario Humano</title>
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2c3e50">
+    <meta name="mobile-web-app-capable" content="yes">
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;700&family=Oswald:wght@500&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            /* TEMA MODERNO */
+            --bg-style: linear-gradient(135deg, #2c3e50 0%, #4ca1af 100%);
+            --font-head: 'Oswald', sans-serif;
+            --font-body: 'Merriweather', serif;
+            --glass: rgba(255, 255, 255, 0.95);
+            --accent: #d35400; 
+            --text: #2c3e50;
+            --border-rad: 8px;
+        }
+
+        /* TEMA ACADÉMICO */
+        body.academic-theme {
+            --bg-style: #f4e4bc;
+            --font-head: 'Times New Roman', serif;
+            --font-body: 'Times New Roman', serif;
+            --glass: #fffef0;
+            --accent: #800000;
+            --text: #000000;
+            --border-rad: 2px;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+        
+        body {
+            margin: 0; height: 100vh; overflow: hidden;
+            background: var(--bg-style);
+            color: var(--text); font-family: var(--font-body);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: background 0.5s;
+        }
+
+        /* UI ELEMENTS */
+        .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; padding: 20px; animation: fadeIn 0.4s; }
+        .screen.active { display: flex; }
+
+        .paper-panel {
+            background: var(--glass); 
+            border-radius: var(--border-rad);
+            padding: 30px 20px; width: 100%; max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3); text-align: center;
+            border-left: 6px solid var(--accent);
+            position: relative; transition: all 0.3s;
+        }
+        
+        h1 { font-family: var(--font-head); font-size: 2.5rem; margin: 0 0 5px 0; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; }
+        h2 { font-family: var(--font-head); margin-bottom: 15px; font-size: 1.5rem; }
+        
+        .word-display { 
+            font-family: var(--font-head); font-size: 2.2rem; font-weight: 900; 
+            color: var(--text); margin: 20px 0; text-transform: uppercase; 
+            border-bottom: 2px solid var(--accent); display: inline-block; padding: 0 10px;
+        }
+
+        input, textarea {
+            width: 100%; padding: 15px; border-radius: var(--border-rad); border: 1px solid #999; margin-bottom: 15px;
+            background: rgba(255,255,255,0.8); font-size: 1rem; font-family: var(--font-body); color: #000; outline: none; resize: none;
+        }
+        input:focus, textarea:focus { border-color: var(--accent); border-width: 2px; }
+
+        .btn {
+            width: 100%; padding: 15px; border-radius: var(--border-rad); border: 1px solid var(--text);
+            background: var(--text); color: #fff; font-weight: 700; font-size: 1rem;
+            cursor: pointer; transition: 0.1s; text-transform: uppercase; font-family: var(--font-head); letter-spacing: 1px;
+            margin-top: 10px;
+        }
+        .btn:active { transform: scale(0.98); opacity: 0.9; }
+        
+        .btn-secondary { background: transparent; color: var(--text); border: 1px solid var(--text); font-size: 0.8rem; padding: 10px; margin-top: 5px; }
+
+        .btn-option { background: #fff; color: #000; border: 1px solid #ccc; margin-bottom: 10px; text-align: left; padding: 15px; font-size: 1rem; font-family: var(--font-body); }
+        .btn-option:hover { background: #f9f9f9; }
+        
+        .btn-settings { position: absolute; top: 20px; right: 20px; z-index: 200; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.5); color: #fff; width: 40px; height: 40px; border-radius: 50%; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        body.academic-theme .btn-settings { color: #000; border-color: #000; }
+
+        /* TIMER BAR */
+        #timer-bar-container { width: 100%; height: 6px; background: #ddd; margin-bottom: 15px; border-radius: 3px; overflow: hidden; display: none; }
+        #timer-bar { height: 100%; background: var(--accent); width: 100%; transition: width 1s linear; }
+
+        /* MODALES */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .setting-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; width: 100%; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        
+        /* SELECTORES */
+        .selector-group { display: flex; background: #eee; padding: 4px; border-radius: var(--border-rad); width: 100%; }
+        .selector-btn { flex: 1; background: none; border: none; color: #666; padding: 8px; font-weight: bold; border-radius: var(--border-rad); cursor: pointer; }
+        .selector-btn.active { background: var(--accent); color: white; }
+
+        .footer { position: absolute; bottom: 10px; font-family: var(--font-head); color: rgba(255,255,255,0.5); font-size: 0.8rem; pointer-events: none; }
+        body.academic-theme .footer { color: rgba(0,0,0,0.5); }
+
+        /* AYUDA LISTA */
+        #help-steps { text-align: left; padding-left: 20px; font-size: 0.95rem; line-height: 1.6; }
+        #help-steps li { margin-bottom: 10px; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <button class="btn-settings" onclick="openModal('modal-settings')">⚙️</button>
+
+    <div id="screen-login" class="screen active">
+        <div class="paper-panel">
+            <h1>DICCIONARIO<br>HUMANO</h1>
+            <p id="sub-title" style="font-style: italic; opacity: 0.7; font-size: 0.9rem; margin-bottom: 20px;">"El arte de mentir con propiedad"</p>
+            <input type="text" id="username" placeholder="Tu Nombre / Name" maxlength="12">
+            
+            <button class="btn" onclick="createGame()" id="btn-create">CREAR SALA</button>
+            
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <input type="text" id="room-code-input" placeholder="CODE" style="margin:0; text-transform:uppercase; text-align:center;" maxlength="4">
+                <button class="btn" style="margin:0; background: var(--accent);" onclick="joinGame()" id="btn-join">ENTRAR</button>
+            </div>
+            
+            <button class="btn btn-secondary" onclick="openModal('modal-help')" id="btn-how-play">¿CÓMO JUGAR?</button>
+
+            <p id="conn-status" style="font-size: 0.7rem; opacity: 0.6; margin-top: 10px;">Conectando...</p>
+        </div>
+    </div>
+
+    <div id="screen-lobby" class="screen">
+        <div class="paper-panel">
+            <h2 id="lbl-room">SALA: <span id="lobby-code" style="color: var(--accent);">----</span></h2>
+            <ul id="player-list" style="list-style: none; padding: 0; text-align: left;"></ul>
+            <div id="host-controls" style="display:none;">
+                <div style="font-size: 0.8rem; margin-bottom: 5px; opacity: 0.7;" id="lbl-timer-info">TIEMPO: 60s</div>
+                <button class="btn" onclick="hostStartRound()" id="btn-start-round">COMENZAR RONDA</button>
+            </div>
+            <p id="lobby-msg">Esperando al anfitrión...</p>
+        </div>
+    </div>
+
+    <div id="screen-write" class="screen">
+        <div class="paper-panel">
+            <div id="timer-bar-container"><div id="timer-bar"></div></div>
+            <span style="font-size: 0.8rem; opacity: 0.6;" id="lbl-define">DEFINE LA PALABRA:</span><br>
+            <div class="word-display" id="game-word">---</div>
+            <textarea id="def-input" rows="4" placeholder="..."></textarea>
+            <button class="btn" onclick="submitDefinition()" id="btn-submit-def">ENVIAR</button>
+            <p id="wait-others-write" style="display:none; color: var(--accent);">Esperando a los demás...</p>
+        </div>
+    </div>
+
+    <div id="screen-vote" class="screen">
+        <div class="paper-panel">
+            <div id="timer-bar-vote-container" style="width: 100%; height: 6px; background: #ddd; margin-bottom: 15px; border-radius: 3px; display:block;"><div id="timer-bar-vote" style="height: 100%; background: var(--accent); width: 100%;"></div></div>
+            <h2 id="lbl-vote-title">VOTA LA REAL</h2>
+            <p style="font-size: 0.9rem; margin-bottom: 20px;"><span id="lbl-which-is">¿Cuál es la correcta para</span> <b id="vote-word">---</b>?</p>
+            <div id="options-container"></div>
+            <p id="wait-others-vote" style="display:none; color: var(--accent);">Esperando votos...</p>
+        </div>
+    </div>
+
+    <div id="screen-result" class="screen">
+        <div class="paper-panel">
+            <h1 id="lbl-results">RESULTADOS</h1>
+            <p style="margin-bottom: 5px;" id="lbl-real-was">La real era:</p>
+            <div style="background: rgba(0,0,0,0.05); padding: 10px; border-radius: 5px; font-style: italic; margin-bottom: 20px; font-weight: bold;" id="real-def-display">...</div>
+            <ul id="scores-list" style="list-style: none; padding: 0; text-align: left; font-size: 0.9rem;"></ul>
+            <div id="host-restart" style="display:none;">
+                <button class="btn" onclick="hostStartRound()" id="btn-next-round">SIGUIENTE RONDA</button>
+            </div>
+            <p id="wait-restart" style="display:none;">Esperando al anfitrión...</p>
+        </div>
+    </div>
+
+    <div id="modal-help" class="modal-overlay" onclick="if(event.target===this) closeModal('modal-help')">
+        <div class="paper-panel" style="width: 90%; text-align: left;">
+            <h2 style="margin-top: 0; text-align: center; color: var(--accent);" id="lbl-how-play-title">CÓMO JUGAR</h2>
+            <ul id="help-steps">
+                </ul>
+            <button class="btn" onclick="closeModal('modal-help')" id="btn-got-it">¡ENTENDIDO!</button>
+        </div>
+    </div>
+
+    <div id="modal-settings" class="modal-overlay" onclick="if(event.target===this) closeModal('modal-settings')">
+        <div class="paper-panel" style="width: 90%; text-align: left;">
+            <h2 style="margin-top: 0; text-align: center;" id="lbl-settings">AJUSTES</h2>
+            <div class="setting-row">
+                <span id="lbl-style">🎨 Estilo</span>
+                <div style="display: flex; gap: 5px;">
+                    <button class="selector-btn active" id="style-modern" onclick="setStyle('modern')">Modern</button>
+                    <button class="selector-btn" id="style-academic" onclick="setStyle('academic')">Academic</button>
+                </div>
+            </div>
+            <div class="setting-row">
+                <span id="lbl-lang">🌐 Idioma</span>
+                <div style="display: flex; gap: 5px;">
+                    <button class="selector-btn active" id="lang-es" onclick="setLang('es')">ES</button>
+                    <button class="selector-btn" id="lang-en" onclick="setLang('en')">EN</button>
+                </div>
+            </div>
+            <div style="margin-top: 10px;">
+                <span style="display:block; margin-bottom: 5px; font-weight: bold;">⏱️ Timer (seg)</span>
+                <div class="selector-group">
+                    <button class="selector-btn" id="time-30" onclick="setTime(30)">30</button>
+                    <button class="selector-btn active" id="time-60" onclick="setTime(60)">60</button>
+                    <button class="selector-btn" id="time-90" onclick="setTime(90)">90</button>
+                    <button class="selector-btn" id="time-inf" onclick="setTime(999)">∞</button>
+                </div>
+            </div>
+            <button class="btn" onclick="closeModal('modal-settings')" style="margin-top: 20px; background: #666;" id="btn-close">CERRAR</button>
+        </div>
+    </div>
+
+    <div class="footer">FranMa Games</div>
+
+    <script>
+        const CFG = { lang: 'es', style: 'modern', time: 60 };
+        const TEXTS = {
+            es: {
+                create: "CREAR SALA", join: "ENTRAR", howPlay: "¿CÓMO JUGAR?", howPlayTitle: "CÓMO JUGAR", gotIt: "¡ENTENDIDO!",
+                lobbyMsg: "Esperando al anfitrión...", start: "COMENZAR RONDA",
+                define: "DEFINE LA PALABRA:", submit: "ENVIAR", waitWrite: "Esperando a los demás...",
+                voteTitle: "VOTA LA REAL", whichIs: "¿Cuál es la correcta para", waitVote: "Esperando votos...",
+                results: "RESULTADOS", realWas: "La definición real era:", next: "SIGUIENTE RONDA", waitNext: "Esperando al anfitrión...",
+                settings: "AJUSTES", style: "🎨 Estilo", lang: "🌐 Idioma", close: "CERRAR", timerInfo: "TIEMPO:",
+                steps: [
+                    "<b>1. Inventa:</b> Recibes una palabra rara. Escribe una definición falsa que parezca real.",
+                    "<b>2. Vota:</b> Se mezclan todas las definiciones con la real. Intenta votar la correcta.",
+                    "<b>3. Gana Puntos:</b> +2 si votas la Real. +1 si alguien vota tu Mentira."
+                ]
+            },
+            en: {
+                create: "CREATE ROOM", join: "JOIN", howPlay: "HOW TO PLAY", howPlayTitle: "HOW TO PLAY", gotIt: "GOT IT!",
+                lobbyMsg: "Waiting for host...", start: "START ROUND",
+                define: "DEFINE THE WORD:", submit: "SUBMIT", waitWrite: "Waiting for others...",
+                voteTitle: "VOTE THE REAL ONE", whichIs: "Which is correct for", waitVote: "Waiting for votes...",
+                results: "RESULTS", realWas: "The real definition was:", next: "NEXT ROUND", waitNext: "Waiting for host...",
+                settings: "SETTINGS", style: "🎨 Style", lang: "🌐 Language", close: "CLOSE", timerInfo: "TIME:",
+                steps: [
+                    "<b>1. Bluff:</b> You get a rare word. Write a fake definition that sounds real.",
+                    "<b>2. Vote:</b> All definitions are mixed with the real one. Try to vote for the correct one.",
+                    "<b>3. Score:</b> +2 points if you vote the Real one. +1 point if someone votes for your Bluff."
+                ]
+            }
+        };
+
+        const WORDS = {
+            es: [{ w: "Jitanjáfora", d: "Texto sin sentido pero de gran valor estético." }, { w: "Petricor", d: "Olor que produce la lluvia al caer sobre suelo seco." }, { w: "Nefelibata", d: "Persona soñadora que no se apercibe de la realidad." }, { w: "Crapuloso", d: "Persona que lleva una vida licenciosa o de vicio." }, { w: "Vagido", d: "Gemido o llanto del recién nacido." }, { w: "Giste", d: "Espuma de la cerveza." }, { w: "Busilis", d: "Punto en que estriba la dificultad del asunto." }, { w: "Sapenco", d: "Caracol terrestre con franjas pardas transversales." }, { w: "Zangolotear", d: "Mover continua y violentamente algo de una parte a otra." }, { w: "Gaznápiro", d: "Palurdo, simplón, torpe, que se queda embobado." }],
+            en: [{ w: "Petrichor", d: "The smell of earth after rain." }, { w: "Defenestrate", d: "To throw someone out of a window." }, { w: "Agastopia", d: "Admiration of a particular part of someone's body." }, { w: "Bibble", d: "To drink often; to eat and/or drink noisily." }, { w: "Cabotage", d: "Transport of goods or passengers between two places in the same country." }, { w: "Erinaceous", d: "Like a hedgehog." }, { w: "Gabelle", d: "A tax on salt." }, { w: "Nudiustertian", d: "Of or relating to the day before yesterday." }, { w: "Yarborough", d: "Hand of cards containing no card above a nine." }, { w: "Xertz", d: "To gulp down quickly and greedily." }]
+        };
+
+        const BROKER = 'wss://broker.emqx.io:8084/mqtt';
+        let client;
+        let myName = "", roomCode = "", isHost = false;
+        let players = []; 
+        let currentRound = {};
+        let timerInterval = null;
+
+        client = mqtt.connect(BROKER);
+        client.on('connect', () => { document.getElementById('conn-status').innerText = "🟢 Conectado"; });
+
+        client.on('message', (topic, message) => {
+            const data = JSON.parse(message.toString());
+            const action = topic.split('/').pop();
+            if (action === 'join') { if (isHost && !players.find(p => p.name === data.name)) { players.push({ name: data.name, score: 0 }); broadcastUpdate(); } } 
+            else if (action === 'update') { players = data.players; renderLobby(); } 
+            else if (action === 'round_start') { startLocalTimer(data.time); document.getElementById('def-input').value = ""; document.getElementById('def-input').disabled = false; document.getElementById('btn-submit-def').style.display = 'block'; document.getElementById('wait-others-write').style.display = 'none'; document.getElementById('game-word').innerText = data.word; showScreen('screen-write'); } 
+            else if (action === 'submit_def') { if (isHost) handleSubmission(data); } 
+            else if (action === 'start_vote') { clearInterval(timerInterval); startLocalTimer(30); renderVoting(data.options, data.word); } 
+            else if (action === 'submit_vote') { if (isHost) handleVote(data); } 
+            else if (action === 'show_results') { clearInterval(timerInterval); renderResults(data); }
+        });
+
+        function hostStartRound() {
+            const list = WORDS[CFG.lang];
+            const item = list[Math.floor(Math.random() * list.length)];
+            currentRound = { word: item.w, realDef: item.d, defs: [], votes: {} };
+            client.publish(`franma/dh/${roomCode}/round_start`, JSON.stringify({ word: item.w, time: CFG.time }));
+        }
+
+        function handleSubmission(data) {
+            if(currentRound.defs.find(d => d.author === data.author)) return;
+            currentRound.defs.push({ text: data.text, author: data.author });
+            if (currentRound.defs.length === players.length) triggerVotingPhase();
+        }
+
+        function triggerVotingPhase() {
+            const allOptions = [...currentRound.defs, { text: currentRound.realDef, author: "REAL" }];
+            allOptions.sort(() => Math.random() - 0.5);
+            client.publish(`franma/dh/${roomCode}/start_vote`, JSON.stringify({ options: allOptions, word: currentRound.word }));
+        }
+
+        function handleVote(data) {
+            if(currentRound.votes[data.voter]) return;
+            currentRound.votes[data.voter] = data.authorVoted;
+            const voter = data.voter;
+            const authorVoted = data.authorVoted;
+            if (authorVoted === "REAL") { const p = players.find(x => x.name === voter); if(p) p.score += 2; } 
+            else { const liar = players.find(x => x.name === authorVoted); if(liar) liar.score += 1; }
+            if (Object.keys(currentRound.votes).length === players.length) {
+                const resultsArray = Object.keys(currentRound.votes).map(v => ({ voter: v, votedFor: currentRound.votes[v] }));
+                client.publish(`franma/dh/${roomCode}/show_results`, JSON.stringify({ realDef: currentRound.realDef, results: resultsArray, scores: players }));
+            }
+        }
+
+        function createGame() {
+            myName = document.getElementById('username').value.trim().toUpperCase();
+            if (!myName) return alert("Nombre!");
+            roomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
+            isHost = true;
+            players = [{ name: myName, score: 0 }];
+            client.subscribe(`franma/dh/${roomCode}/+`);
+            showScreen('screen-lobby');
+            document.getElementById('lobby-code').innerText = roomCode;
+            document.getElementById('host-controls').style.display = 'block';
+            renderLobby();
+        }
+
+        function joinGame() {
+            myName = document.getElementById('username').value.trim().toUpperCase();
+            roomCode = document.getElementById('room-code-input').value.trim().toUpperCase();
+            if (!myName || roomCode.length !== 4) return alert("Error");
+            isHost = false;
+            client.subscribe(`franma/dh/${roomCode}/+`);
+            setTimeout(() => { client.publish(`franma/dh/${roomCode}/join`, JSON.stringify({ name: myName })); }, 500);
+            showScreen('screen-lobby');
+            document.getElementById('lobby-code').innerText = roomCode;
+        }
+
+        function broadcastUpdate() { client.publish(`franma/dh/${roomCode}/update`, JSON.stringify({ players: players })); }
+
+        function submitDefinition() {
+            let def = document.getElementById('def-input').value.trim();
+            if (!def) def = "???"; 
+            document.getElementById('def-input').disabled = true;
+            document.getElementById('btn-submit-def').style.display = 'none';
+            document.getElementById('wait-others-write').style.display = 'block';
+            client.publish(`franma/dh/${roomCode}/submit_def`, JSON.stringify({ text: def, author: myName }));
+        }
+
+        function sendVote(authorVoted) {
+            if (authorVoted === myName) return alert("¡No puedes votarte!");
+            document.getElementById('options-container').style.display = 'none';
+            document.getElementById('wait-others-vote').style.display = 'block';
+            client.publish(`franma/dh/${roomCode}/submit_vote`, JSON.stringify({ voter: myName, authorVoted: authorVoted }));
+        }
+
+        function startLocalTimer(seconds) {
+            if(seconds > 900) { document.getElementById('timer-bar-container').style.display = 'none'; return; }
+            const bar = document.getElementById('timer-bar');
+            const barVote = document.getElementById('timer-bar-vote');
+            document.getElementById('timer-bar-container').style.display = 'block';
+            bar.style.transition = 'none'; bar.style.width = '100%';
+            barVote.style.transition = 'none'; barVote.style.width = '100%';
+            setTimeout(() => {
+                bar.style.transition = `width ${seconds}s linear`; bar.style.width = '0%';
+                barVote.style.transition = `width ${seconds}s linear`; barVote.style.width = '0%';
+            }, 50);
+            clearInterval(timerInterval);
+            let left = seconds;
+            timerInterval = setInterval(() => {
+                left--;
+                if(left <= 0) {
+                    clearInterval(timerInterval);
+                    if(document.getElementById('screen-write').classList.contains('active')) { if(!document.getElementById('def-input').disabled) submitDefinition(); }
+                }
+            }, 1000);
+        }
+
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        
+        function updateUI() {
+            const t = TEXTS[CFG.lang];
+            const ids = {
+                'btn-create': t.create, 'btn-join': t.join, 'btn-how-play': t.howPlay, 'lobby-msg': t.lobbyMsg, 'btn-start-round': t.start,
+                'lbl-define': t.define, 'btn-submit-def': t.submit, 'wait-others-write': t.waitWrite,
+                'lbl-vote-title': t.voteTitle, 'lbl-which-is': t.whichIs, 'wait-others-vote': t.waitVote,
+                'lbl-results': t.results, 'lbl-real-was': t.realWas, 'btn-next-round': t.next, 'wait-restart': t.waitNext,
+                'lbl-settings': t.settings, 'lbl-style': t.style, 'lbl-lang': t.lang, 'btn-close': t.close, 'lbl-timer-info': t.timerInfo,
+                'lbl-how-play-title': t.howPlayTitle, 'btn-got-it': t.gotIt
+            };
+            for(const [id, txt] of Object.entries(ids)) if(document.getElementById(id)) document.getElementById(id).innerText = txt;
+            document.getElementById('lbl-timer-info').innerText = t.timerInfo + " " + (CFG.time > 900 ? "∞" : CFG.time + "s");
+
+            // Actualizar lista de instrucciones
+            const ul = document.getElementById('help-steps');
+            ul.innerHTML = "";
+            t.steps.forEach(step => {
+                const li = document.createElement('li');
+                li.innerHTML = step;
+                ul.appendChild(li);
+            });
+
+            document.getElementById('style-modern').className = CFG.style === 'modern' ? 'selector-btn active' : 'selector-btn';
+            document.getElementById('style-academic').className = CFG.style === 'academic' ? 'selector-btn active' : 'selector-btn';
+            document.getElementById('lang-es').className = CFG.lang === 'es' ? 'selector-btn active' : 'selector-btn';
+            document.getElementById('lang-en').className = CFG.lang === 'en' ? 'selector-btn active' : 'selector-btn';
+            
+            ['30','60','90','inf'].forEach(x => {
+                const val = x === 'inf' ? 999 : parseInt(x);
+                document.getElementById('time-'+x).className = CFG.time === val ? 'selector-btn active' : 'selector-btn';
+            });
+        }
+
+        function setStyle(s) { CFG.style = s; document.body.className = s === 'academic' ? 'academic-theme' : ''; updateUI(); }
+        function setLang(l) { CFG.lang = l; updateUI(); }
+        function setTime(t) { CFG.time = t; updateUI(); }
+
+        function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+        function renderLobby() {
+            const list = document.getElementById('player-list'); list.innerHTML = "";
+            players.forEach(p => { const li = document.createElement('li'); li.style.padding = "10px"; li.style.borderBottom = "1px solid #ccc"; li.style.display="flex"; li.style.justifyContent="space-between"; li.innerHTML = `<span>👤 ${p.name}</span> <b>${p.score} pts</b>`; list.appendChild(li); });
+        }
+        function renderVoting(options, word) {
+            document.getElementById('vote-word').innerText = word; document.getElementById('wait-others-vote').style.display = 'none'; document.getElementById('options-container').style.display = 'block'; const container = document.getElementById('options-container'); container.innerHTML = "";
+            options.forEach(opt => { const btn = document.createElement('button'); btn.className = 'btn btn-option'; btn.innerText = opt.text; btn.onclick = () => sendVote(opt.author); container.appendChild(btn); });
+            showScreen('screen-vote');
+        }
+        function renderResults(data) {
+            document.getElementById('real-def-display').innerText = data.realDef; const list = document.getElementById('scores-list'); list.innerHTML = "";
+            data.results.forEach(r => { const li = document.createElement('li'); li.style.marginBottom="5px"; let txt = `<b>${r.voter}</b> → `; if (r.votedFor === "REAL") txt += `<span style='color:green; font-weight:bold'>ACERTÓ (+2)</span>`; else txt += `<span style='color:red'>votó a ${r.votedFor} (+1)</span>`; li.innerHTML = txt; list.appendChild(li); });
+            players = data.scores;
+            if (isHost) { document.getElementById('host-restart').style.display = 'block'; document.getElementById('wait-restart').style.display = 'none'; } else { document.getElementById('host-restart').style.display = 'none'; document.getElementById('wait-restart').style.display = 'block'; }
+            showScreen('screen-result');
+        }
+        updateUI();
+    </script>
+</body>
+</html>

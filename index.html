@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FranMa Games</title>
+    <style>
+        /* ESTILO GENERAL */
+        body { margin: 0; background: #131518; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        
+        /* HEADER */
+        .header { text-align: center; margin-top: 40px; margin-bottom: 30px; animation: fadeIn 1s ease-in; }
+        h1 { font-size: 3rem; color: #00d2d3; text-transform: uppercase; letter-spacing: 3px; margin: 0; text-shadow: 0 0 20px rgba(0, 210, 211, 0.3); }
+        .subtitle { color: #aaa; margin-top: 10px; font-size: 1rem; letter-spacing: 1px; }
+        
+        /* GRILLA DE JUEGOS */
+        .games-grid { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; max-width: 900px; padding: 20px; width: 100%; box-sizing: border-box; }
+        
+        /* TARJETAS */
+        .game-card {
+            background: #2d3436; border: 2px solid #444; border-radius: 20px;
+            width: 150px; height: 170px; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; text-decoration: none;
+            color: white; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); 
+            cursor: pointer; text-align: center; padding: 15px; position: relative; overflow: hidden;
+        }
+        
+        .game-card:hover { transform: translateY(-8px); border-color: #00d2d3; box-shadow: 0 10px 20px rgba(0,0,0,0.3); background: #353b48; }
+        .game-card:active { transform: scale(0.95); }
+        
+        .icon { font-size: 3.5rem; margin-bottom: 15px; text-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+        .title { font-weight: bold; font-size: 0.9rem; text-transform: uppercase; line-height: 1.2; }
+
+        /* Colores Específicos al Hover (Opcional) */
+        .card-rosco:hover { border-color: #0984e3; }
+        .card-100:hover { border-color: #f1c40f; }
+        .card-boom:hover { border-color: #ff4757; }
+        .card-trato:hover { border-color: #2ecc71; }
+        .card-dicc:hover { border-color: #9b59b6; }
+        .card-msg:hover { border-color: #e67e22; }
+
+        /* FOOTER */
+        .footer { margin-top: auto; padding: 40px; text-align: center; border-top: 1px solid #333; width: 100%; color: #666; font-size: 0.9rem; }
+        .cafe-btn {
+            background: linear-gradient(45deg, #00d2d3, #00cec9); color: #131518;
+            padding: 10px 25px; border-radius: 50px; text-decoration: none;
+            font-weight: bold; display: inline-block; margin-top: 15px;
+            box-shadow: 0 4px 15px rgba(0, 210, 211, 0.3); transition: 0.2s;
+        }
+        .cafe-btn:hover { transform: scale(1.05); box-shadow: 0 6px 20px rgba(0, 210, 211, 0.5); }
+
+        @keyframes fadeIn { from { opacity:0; transform: translateY(-20px); } to { opacity:1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>FranMa Games</h1>
+        <div class="subtitle">ARCADE DE FIESTA</div>
+    </div>
+
+    <div class="games-grid">
+        
+        <a href="./rosco/" class="game-card card-rosco">
+            <div class="icon">🅰️</div>
+            <div class="title">El Rosco</div>
+        </a>
+
+        <a href="./100dicen/" class="game-card card-100">
+            <div class="icon">💯</div>
+            <div class="title">100 Dicen</div>
+        </a>
+
+        <a href="./tratohecho/" class="game-card card-trato">
+            <div class="icon">💼</div>
+            <div class="title">Trato Hecho</div>
+        </a>
+
+        <a href="./tiktak/" class="game-card card-boom">
+            <div class="icon">💣</div>
+            <div class="title">Tik Tak Boom!</div>
+        </a>
+
+        <a href="./mensaje/" class="game-card card-msg">
+            <div class="icon">🔐</div>
+            <div class="title">Mensaje Encriptado</div>
+        </a>
+
+        <a href="./diccionario/" class="game-card card-dicc">
+            <div class="icon">📖</div>
+            <div class="title">Diccionario Humano</div>
+        </a>
+
+    </div>
+
+    <div class="footer">
+        <p>Juegos diseñados para romper el hielo.</p>
+        <a href="#" class="cafe-btn">☕ Invitar un Cafecito</a>
+    </div>
+
+</body>
+</html>
