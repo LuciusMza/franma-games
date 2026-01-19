@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#8e44ad">
+    
+    <title>Taboo FranMa</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- ESTILOS VISUALES --- */
+        :root {
+            --bg: #1a1a2e;
+            --card-bg: #fff;
+            --main: #8e44ad;
+            --main-light: #9b59b6;
+            --forbidden: #c0392b;
+            --correct: #27ae60;
+            --gold: #f1c40f;
+        }
+
+        * { box-sizing: border-box; touch-action: manipulation; }
+
+        body { 
+            margin: 0; height: 100vh; overflow: hidden; 
+            background: radial-gradient(circle at center, #2c3e50, #000); 
+            font-family: 'Montserrat', sans-serif; color: white; 
+            display: flex; flex-direction: column; user-select: none; 
+        }
+
+        /* PANTALLAS */
+        .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; position: absolute; top:0; left:0; z-index: 10; padding: 20px; }
+        .active { display: flex; animation: fadeUp 0.4s; }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+
+        /* HOME */
+        h1 { font-size: 4rem; margin: 0; color: var(--main-light); text-transform: uppercase; letter-spacing: -2px; text-shadow: 0 5px 0 #000; }
+        .subtitle { color: #aaa; margin-bottom: 20px; letter-spacing: 2px; text-transform: uppercase; font-size: 0.8rem; }
+        
+        /* CAJA DE CONFIGURACIÓN (Fixed Overflow) */
+        .setup-box { 
+            background: rgba(255,255,255,0.1); padding: 20px; border-radius: 15px; 
+            width: 100%; max-width: 350px; margin-bottom: 10px; border: 1px solid #444; 
+        }
+        .label { display: block; color: #fff; margin-bottom: 8px; font-size: 0.8rem; text-transform: uppercase; font-weight: bold; text-align: center; }
+        
+        /* INPUTS NOMBRES (Fixed Layout) */
+        .names-col { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
+        .inp-text { 
+            width: 100%; padding: 12px; border-radius: 8px; border: none; 
+            text-align: center; font-family: 'Montserrat'; font-weight: bold; 
+            text-transform: uppercase; font-size: 1rem;
+        }
+        
+        /* CONTADOR DE RONDAS (Nuevo) */
+        .counter-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 15px; }
+        .btn-count { 
+            width: 40px; height: 40px; border-radius: 50%; border: 2px solid #fff; 
+            background: transparent; color: white; font-size: 1.5rem; font-weight: bold; cursor: pointer;
+        }
+        .inp-number { 
+            width: 80px; padding: 10px; text-align: center; font-size: 1.5rem; 
+            border-radius: 8px; border: none; font-weight: bold; font-family: 'Montserrat';
+        }
+
+        /* BOTONES DE TIEMPO */
+        .time-opts { display: flex; gap: 10px; margin-bottom: 10px; }
+        .btn-time { 
+            flex: 1; background: transparent; border: 2px solid #fff; color: #fff; 
+            padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; 
+            transition: 0.2s; font-size: 0.9rem;
+        }
+        .btn-time.selected { 
+            background: var(--main); border-color: var(--main); color: white; 
+            box-shadow: 0 0 15px var(--main);
+        }
+
+        .btn-start { background: var(--main); color: white; border: none; padding: 15px 50px; border-radius: 50px; font-size: 1.5rem; font-weight: 900; box-shadow: 0 10px 20px rgba(0,0,0,0.4); cursor: pointer; text-transform: uppercase; letter-spacing: 1px; width: 100%; max-width: 300px; margin-bottom: 15px; }
+        .btn-start:active { transform: scale(0.95); }
+
+        .btn-link { background: none; border: none; color: #bbb; text-decoration: underline; cursor: pointer; font-size: 0.9rem; }
+
+        /* JUEGO */
+        #game-header { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 15px; position: absolute; top: 0; z-index: 20; }
+        .timer-box { font-size: 2.5rem; font-weight: 900; font-variant-numeric: tabular-nums; text-shadow: 2px 2px 0 #000; }
+        .timer-box.hurry { color: #e74c3c; animation: pulse 0.5s infinite; }
+        .team-indicator { font-size: 1.2rem; font-weight: bold; color: var(--main-light); background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 20px; border: 1px solid var(--main); }
+
+        /* TARJETA */
+        .card-container { flex: 1; display: flex; align-items: center; justify-content: center; width: 100%; position: relative; perspective: 1000px; }
+        .card { 
+            width: 90%; max-width: 350px; aspect-ratio: 2/3; background: var(--card-bg); 
+            border-radius: 20px; box-shadow: 0 15px 30px rgba(0,0,0,0.5); 
+            display: flex; flex-direction: column; padding: 5px; position: relative;
+            transform-style: preserve-3d; transition: transform 0.4s;
+        }
+        .card.swiping-right { transform: translateX(120%) rotate(20deg); opacity: 0; }
+        .card.swiping-left { transform: translateX(-120%) rotate(-20deg); opacity: 0; }
+        
+        .card-top { background: var(--main); color: white; padding: 20px; border-radius: 15px 15px 0 0; text-align: center; flex: 1; display: flex; align-items: center; justify-content: center; }
+        .target-word { font-size: 2.2rem; font-weight: 900; text-transform: uppercase; line-height: 1.1; }
+        
+        .card-body { flex: 2; padding: 20px; display: flex; flex-direction: column; justify-content: center; gap: 15px; }
+        .forbidden-word { 
+            color: var(--forbidden); font-weight: 700; font-size: 1.4rem; text-align: center; 
+            text-transform: uppercase; border-bottom: 2px solid #eee; padding-bottom: 5px; 
+        }
+        .forbidden-word:last-child { border-bottom: none; }
+
+        /* CONTROLES */
+        .controls { width: 100%; padding: 20px; display: flex; gap: 20px; justify-content: center; padding-bottom: 40px; }
+        .btn-ctrl { 
+            width: 80px; height: 80px; border-radius: 50%; border: 4px solid #fff; 
+            font-size: 2rem; display: flex; align-items: center; justify-content: center; 
+            cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.3); transition: transform 0.1s;
+        }
+        .btn-ctrl:active { transform: scale(0.9); }
+        .btn-skip { background: var(--forbidden); color: white; }
+        .btn-ok { background: var(--correct); color: white; }
+
+        /* INTERMEDIO Y FINAL */
+        .big-score { font-size: 5rem; font-weight: 900; margin: 10px 0; color: var(--main-light); }
+        .round-status { font-size: 0.8rem; color: #aaa; margin-top: 5px; letter-spacing: 1px; }
+
+        .winner-cup { font-size: 6rem; animation: pulse 1s infinite; margin-bottom: 10px; }
+        .winner-name { color: var(--gold); font-size: 3rem; font-weight: 900; text-shadow: 0 0 20px var(--gold); margin-bottom: 20px; text-transform: uppercase; }
+
+        /* MODAL AYUDA */
+        #modal-help { background: rgba(0,0,0,0.95); z-index: 100; padding: 30px; display: none; overflow-y: auto; }
+        .help-box { max-width: 500px; color: #ddd; line-height: 1.5; text-align: left; }
+        .help-title { color: var(--main-light); font-weight: 900; font-size: 2rem; margin-bottom: 15px; border-bottom: 1px solid #555; text-align: center; }
+        .help-step { margin-bottom: 15px; }
+        .help-step b { color: #fff; }
+
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+    </style>
+</head>
+<body>
+
+    <div id="screen-home" class="screen active">
+        <div style="font-size:4rem; margin-bottom:10px;">🤐</div>
+        <h1>TABOO</h1>
+        <div class="subtitle">EDICIÓN TORNEO</div>
+        
+        <div class="setup-box">
+            <span class="label">NOMBRES DE EQUIPOS</span>
+            <div class="names-col">
+                <input type="text" id="name1" class="inp-text" value="EQUIPO 1" placeholder="EQ 1">
+                <input type="text" id="name2" class="inp-text" value="EQUIPO 2" placeholder="EQ 2">
+            </div>
+
+            <span class="label" style="margin-top:10px;">JUGADORES (RONDAS)</span>
+            <div class="counter-row">
+                <button class="btn-count" onclick="adjustRounds(-1)">-</button>
+                <input type="number" id="roundsInput" class="inp-number" value="3" min="1">
+                <button class="btn-count" onclick="adjustRounds(1)">+</button>
+            </div>
+            <div style="text-align:center; font-size:0.6rem; color:#aaa; margin-bottom:15px; margin-top:-10px;">(Sin límite de jugadores)</div>
+
+            <span class="label">TIEMPO POR TURNO</span>
+            <div class="time-opts">
+                <button class="btn-time" onclick="setTime(30, this)">30s</button>
+                <button class="btn-time selected" onclick="setTime(60, this)">60s</button>
+                <button class="btn-time" onclick="setTime(90, this)">90s</button>
+            </div>
+        </div>
+
+        <button class="btn-start" onclick="startMatch()">JUGAR</button>
+        <button class="btn-link" onclick="document.getElementById('modal-help').style.display='flex'">¿CÓMO JUGAR?</button>
+    </div>
+
+    <div id="screen-pre" class="screen">
+        <h2 style="color:#aaa; text-transform:uppercase; margin:0;">TURNO DE</h2>
+        <h1 id="team-turn-name" style="color:var(--main-light); font-size:3rem; margin:10px 0; text-align: center;">EQUIPO 1</h1>
+        <div id="round-tracker" style="color: var(--gold); font-weight: bold; margin-bottom: 20px; border: 1px solid var(--gold); padding: 5px 15px; border-radius: 20px;">RONDA 1</div>
+        <p style="text-align:center; max-width:300px; color:#ddd; line-height:1.5; margin-bottom: 30px;">
+            1. Entreguen el celular al <b>"Describidor"</b>.<br>
+            2. Un rival debe pararse atrás para <b>vigilar</b>.
+        </p>
+        <button class="btn-start" onclick="startRound()">¡ESTOY LISTO!</button>
+    </div>
+
+    <div id="screen-game" class="screen" style="justify-content: flex-start; padding: 0;">
+        <div id="game-header">
+            <div class="team-indicator" id="game-team-name">EQ 1</div>
+            <div class="timer-box" id="timer">60</div>
+        </div>
+
+        <div class="card-container">
+            <div class="card" id="current-card">
+                <div class="card-top">
+                    <div class="target-word" id="word-target">...</div>
+                </div>
+                <div class="card-body" id="forbidden-list">
+                    </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="btn-ctrl btn-skip" onclick="handleCard(false)">✕</div> <div class="btn-ctrl btn-ok" onclick="handleCard(true)">✓</div>   </div>
+        <div style="text-align:center; color:#666; font-size:0.7rem; margin-bottom:10px;">ROJO = TABOO/PASO | VERDE = ACIERTO</div>
+    </div>
+
+    <div id="screen-score" class="screen">
+        <h2>PUNTUACIÓN</h2>
+        <div style="display:flex; gap:20px; text-align:center; width:100%; justify-content:center;">
+            <div>
+                <div class="label" id="lbl-sc-1" style="color:var(--main-light);">EQUIPO 1</div>
+                <div class="big-score" id="score-1">0</div>
+                <div class="round-status" id="rd-status-1">Rondas: 0/0</div>
+            </div>
+            <div>
+                <div class="label" id="lbl-sc-2" style="color:#aaa;">EQUIPO 2</div>
+                <div class="big-score" id="score-2">0</div>
+                <div class="round-status" id="rd-status-2">Rondas: 0/0</div>
+            </div>
+        </div>
+        <button class="btn-start" style="margin-top:40px;" onclick="nextTurn()">SIGUIENTE TURNO</button>
+    </div>
+
+    <div id="screen-end" class="screen">
+        <div class="winner-cup">🏆</div>
+        <h2 style="color:#aaa; margin:0;">CAMPEONES</h2>
+        <div class="winner-name" id="winner-name">EQUIPO 1</div>
+        <div style="font-size:1.5rem; color:#fff; margin-bottom:30px;" id="final-score-txt">0 - 0</div>
+        <button class="btn-start" onclick="location.reload()">NUEVA PARTIDA</button>
+    </div>
+
+    <div id="modal-help" class="screen">
+        <div class="help-box">
+            <div class="help-title">REGLAS</div>
+            <div class="help-step">1. <b>Objetivo:</b> Haz que tu equipo adivine la palabra superior (Violeta).</div>
+            <div class="help-step">2. <b>Prohibido:</b> No puedes decir NINGUNA de las palabras en Rojo. Tampoco partes de la palabra ("auto" por "automóvil") ni traducciones.</div>
+            <div class="help-step">3. <b>El Vigilante:</b> Un jugador del equipo contrario mira la pantalla para asegurar que no digas las prohibidas. Si dices una, ¡él grita TABOO! y debes pulsar el botón Rojo (X).</div>
+            <div class="help-step">4. <b>Rondas:</b> Jugarán tantos turnos como hayan configurado. Gana el equipo con más puntos totales al final.</div>
+            <button class="btn-start" style="font-size:1rem; padding:10px; margin-top:20px; width:100%;" onclick="document.getElementById('modal-help').style.display='none'">ENTENDIDO</button>
+        </div>
+    </div>
+
+    <script>
+        // --- BASE DE DATOS EXTENDIDA (~280 PALABRAS) ---
+        const DB = [
+            { w: "FUTBOL", f: ["PELOTA", "DEPORTE", "GOL", "MESSI"] },
+            { w: "PLAYA", f: ["ARENA", "MAR", "SOL", "VERANO"] },
+            { w: "ESCUELA", f: ["ALUMNOS", "MAESTRA", "ESTUDIAR", "CLASE"] },
+            { w: "PIZZA", f: ["COMIDA", "QUESO", "HARINA", "ITALIA"] },
+            { w: "TELEFONO", f: ["LLAMAR", "CELULAR", "HABLAR", "MENSAJE"] },
+            { w: "PERRO", f: ["ANIMAL", "LADRAR", "MASCOTA", "GATO"] },
+            { w: "CINE", f: ["PELICULA", "ACTOR", "PANTALLA", "POCHOCLO"] },
+            { w: "DOCTOR", f: ["HOSPITAL", "ENFERMO", "MEDICINA", "CURAR"] },
+            { w: "CAMA", f: ["DORMIR", "SUEÑO", "ALMOHADA", "NOCHE"] },
+            { w: "HELADO", f: ["POSTRE", "FRIO", "CREMA", "VERANO"] },
+            { w: "AVION", f: ["VOLAR", "CIELO", "AEROPUERTO", "VIAJE"] },
+            { w: "CUMPLEAÑOS", f: ["TORTA", "FIESTA", "REGALO", "VELITAS"] },
+            { w: "LIBRO", f: ["LEER", "PAGINAS", "HISTORIA", "BIBLIOTECA"] },
+            { w: "GUITARRA", f: ["MUSICA", "INSTRUMENTO", "CUERDAS", "TOCAR"] },
+            { w: "AUTO", f: ["VEHICULO", "RUEDAS", "MANEJAR", "MOTOR"] },
+            { w: "RELOJ", f: ["TIEMPO", "HORA", "MINUTOS", "MANECILLAS"] },
+            { w: "ZAPATO", f: ["PIE", "CALZADO", "CAMINAR", "CORDONES"] },
+            { w: "LLAVE", f: ["PUERTA", "ABRIR", "CERRADURA", "CASA"] },
+            { w: "LUNA", f: ["NOCHE", "CIELO", "ESTRELLAS", "SOL"] },
+            { w: "FANTASMA", f: ["MIEDO", "ESPIRITU", "SABANA", "MUERTO"] },
+            { w: "INTERNET", f: ["WIFI", "RED", "CONEXION", "ONLINE"] },
+            { w: "DINERO", f: ["PLATA", "BILLETE", "COMPRAR", "PAGAR"] },
+            { w: "AGUA", f: ["BEBER", "LIQUIDO", "SED", "TRANSPARENTE"] },
+            { w: "FUEGO", f: ["CALOR", "QUEMAR", "INCENDIO", "LLAMA"] },
+            { w: "ESPEJO", f: ["REFLEJO", "MIRARSE", "VIDRIO", "IMAGEN"] },
+            { w: "CHOCOLATE", f: ["CACAO", "DULCE", "NEGRO", "BLANCO"] },
+            { w: "VAMPIRO", f: ["SANGRE", "DIENTES", "MURCIELAGO", "DRACULA"] },
+            { w: "BODA", f: ["CASAMIENTO", "NOVIA", "VESTIDO", "ANILLO"] },
+            { w: "JARDIN", f: ["FLORES", "PLANTAS", "PASTO", "VERDE"] },
+            { w: "PAYASO", f: ["CIRCO", "NARIZ", "ROJA", "GRACIOSO"] },
+            { w: "SUPERMAN", f: ["HEROE", "CAPA", "VOLAR", "KRIPTONITA"] },
+            { w: "MICROFONO", f: ["CANTAR", "VOZ", "KARAOKE", "HABLAR"] },
+            { w: "BOTELLA", f: ["VIDRIO", "PLASTICO", "AGUA", "ENVASE"] },
+            { w: "ARBOL", f: ["PLANTA", "HOJAS", "TRONCO", "NATURALEZA"] },
+            { w: "DORMIR", f: ["CAMA", "SUEÑO", "NOCHE", "OJOS"] },
+            { w: "RATON", f: ["QUESO", "GATO", "ANIMAL", "MICKEY"] },
+            { w: "TREN", f: ["VIAJE", "VIAS", "ESTACION", "LOCOMOTORA"] },
+            { w: "BAÑO", f: ["DUCHA", "INODORO", "LAVARSE", "AGUA"] },
+            { w: "SOL", f: ["ESTRELLA", "DIA", "CALOR", "LUZ"] },
+            { w: "NIEVE", f: ["BLANCA", "FRIO", "INVIERNO", "HIELO"] },
+            { w: "HORMIGA", f: ["INSECTO", "PEQUEÑO", "TRABAJAR", "COLONIA"] },
+            { w: "MARTILLO", f: ["HERRAMIENTA", "CLAVO", "GOLPEAR", "CONSTRUIR"] },
+            { w: "SOMBRERO", f: ["CABEZA", "GORRA", "VESTIR", "SOL"] },
+            { w: "ANILLO", f: ["DEDO", "JOYA", "COMPROMISO", "MANO"] },
+            { w: "ELEFANTE", f: ["TROMPA", "GRANDE", "ANIMAL", "AFRICA"] },
+            { w: "NARIZ", f: ["OLER", "CARA", "RESPIRAR", "MOKO"] },
+            { w: "FOTO", f: ["CAMARA", "IMAGEN", "RECUERDO", "SELFI"] },
+            { w: "BICICLETA", f: ["RUEDAS", "PEDAL", "ANDAR", "EQUILIBRIO"] },
+            { w: "ISLA", f: ["MAR", "TIERRA", "DESIERTA", "AGUA"] },
+            { w: "LECHE", f: ["VACA", "BLANCA", "BEBER", "DESAYUNO"] },
+            { w: "SILLA", f: ["SENTARSE", "MESA", "MUEBLE", "PATAS"] },
+            { w: "LENTES", f: ["OJOS", "VER", "ANTEOJOS", "SOL"] },
+            { w: "BEBE", f: ["NIÑO", "LLORAR", "PAÑAL", "CHUPETE"] },
+            { w: "CORAZON", f: ["AMOR", "LATIR", "CUERPO", "ROJO"] },
+            { w: "MANZANA", f: ["FRUTA", "ROJA", "COMER", "BLANCANIEVES"] },
+            { w: "BRUJA", f: ["ESCOBA", "HECHIZO", "MAGIA", "FEA"] },
+            { w: "PESCAR", f: ["CAÑA", "RIO", "PEZ", "ANZUELO"] },
+            { w: "CIRCO", f: ["PAYASO", "CARPA", "ANIMALES", "ESPECTACULO"] },
+            { w: "FIESTA", f: ["BAILAR", "MUSICA", "AMIGOS", "NOCHE"] },
+            { w: "GOTA", f: ["AGUA", "LLUVIA", "LIQUIDO", "CAER"] },
+            { w: "REY", f: ["CORONA", "REINA", "CASTILLO", "MANDAR"] },
+            { w: "PINTOR", f: ["CUADRO", "PINCEL", "ARTE", "COLORES"] },
+            { w: "CARCEL", f: ["PRESO", "REJAS", "POLICIA", "DELITO"] },
+            { w: "BOMBERO", f: ["FUEGO", "MANGUERA", "INCENDIO", "AYUDA"] },
+            { w: "DENTISTA", f: ["DIENTES", "DOLOR", "BOCA", "DOCTOR"] },
+            { w: "PIRATA", f: ["BARCO", "TESORO", "PARCHE", "MAR"] },
+            { w: "GLOBO", f: ["AIRE", "FLOTAR", "CUMPLEAÑOS", "EXPLOTAR"] },
+            { w: "CAMION", f: ["GRANDE", "VEHICULO", "CARGA", "RUTA"] },
+            { w: "BANANA", f: ["FRUTA", "AMARILLA", "MONO", "COMER"] },
+            { w: "LUZ", f: ["LAMPARA", "OSCURIDAD", "FOCO", "VER"] },
+            { w: "ESPADA", f: ["FILO", "ARMA", "GUERRA", "LUCHAR"] },
+            { w: "ABUELA", f: ["FAMILIA", "VIEJA", "NIETOS", "MAMA"] },
+            { w: "JABON", f: ["LAVAR", "MANOS", "BAÑO", "ESPUMA"] },
+            { w: "LLORAR", f: ["LAGRIMAS", "TRISTE", "OJOS", "DOLOR"] },
+            { w: "REGALO", f: ["SORPRESA", "ENVOLVER", "DAR", "CUMPLEAÑOS"] },
+            { w: "BOCA", f: ["COMER", "HABLAR", "CARA", "LABIOS"] },
+            { w: "PELOTA", f: ["REDONDA", "JUGAR", "FUTBOL", "DEPORTE"] },
+            { w: "ZOMBIE", f: ["MUERTO", "CEREBRO", "WALKING", "VIVO"] },
+            { w: "BATMAN", f: ["HEROE", "MURCIELAGO", "ROBIN", "GOTHAM"] },
+            { w: "HARRY POTTER", f: ["MAGIA", "LIBRO", "PELICULA", "VARITA"] },
+            { w: "SPIDERMAN", f: ["ARAÑA", "RED", "HEROE", "PETER"] },
+            { w: "DADO", f: ["JUGAR", "AZAR", "NUMEROS", "CUBO"] },
+            { w: "SERPIENTE", f: ["VIBORA", "VENENO", "REPTIL", "LARGA"] },
+            { w: "CANGURO", f: ["SALTAR", "AUSTRALIA", "BOLSA", "ANIMAL"] },
+            { w: "HOSPITAL", f: ["MEDICOS", "ENFERMOS", "AMBULANCIA", "SALUD"] },
+            { w: "RESTAURANTE", f: ["COMER", "CENA", "MOZO", "PEDIR"] },
+            { w: "MUSEO", f: ["ARTE", "CUADROS", "ANTIGUO", "VISITAR"] },
+            { w: "ZAPATO", f: ["PIE", "CALZAR", "CAMINAR", "SUELA"] },
+            { w: "MONTAÑA", f: ["ALTA", "NIEVE", "ESCALAR", "PIEDRA"] },
+            { w: "RIO", f: ["AGUA", "PESCAR", "CORRIENTE", "MAR"] },
+            { w: "FLOR", f: ["PLANTA", "OLOR", "PRIMAVERA", "JARDIN"] },
+            { w: "ABEJA", f: ["MIEL", "INSECTO", "PICAR", "AMARILLA"] },
+            { w: "CABALLO", f: ["MONTAR", "ANIMAL", "JINETE", "GALOPAR"] },
+            { w: "VACA", f: ["LECHE", "GRANJA", "ANIMAL", "MUU"] },
+            { w: "CERDO", f: ["CHANCHO", "GRANJA", "JAMON", "SUCIO"] },
+            { w: "GALLINA", f: ["HUEVOS", "GRANJA", "PLUMAS", "POLLO"] },
+            { w: "PATO", f: ["LAGO", "AGUA", "CUACK", "AVE"] },
+            { w: "LEON", f: ["SELVA", "REY", "ANIMAL", "MELENA"] },
+            { w: "TIGRE", f: ["RAYAS", "FELINO", "SELVA", "ANIMAL"] },
+            { w: "JIRAFA", f: ["CUELLO", "ALTA", "ANIMAL", "MANCHAS"] },
+            { w: "MONO", f: ["BANANA", "SELVA", "ARBOL", "ANIMAL"] },
+            { w: "OSO", f: ["MIEL", "BOSQUE", "ANIMAL", "PELUDO"] },
+            { w: "PINGUINO", f: ["FRIO", "HIELO", "AVE", "ANTARTIDA"] },
+            { w: "DELFIN", f: ["MAR", "SALTAR", "ANIMAL", "FLIPPER"] },
+            { w: "TIBURON", f: ["MAR", "DIENTES", "MIEDO", "PELICULA"] },
+            { w: "PULPO", f: ["TENTACULOS", "MAR", "TINTA", "OCHO"] },
+            { w: "CANGREJO", f: ["PLAYA", "PINZAS", "ROJO", "CAMINAR"] },
+            { w: "BALLENA", f: ["MAR", "GRANDE", "ANIMAL", "PINOCHO"] },
+            { w: "TORTUGA", f: ["LENTA", "CAPARAZON", "ANIMAL", "LIEBRE"] },
+            { w: "CONEJO", f: ["OREJAS", "ZANAHORIA", "SALTAR", "PASCUA"] },
+            { w: "RATON PEREZ", f: ["DIENTE", "ALMOHADA", "MONEDA", "NOCHE"] },
+            { w: "PAPA NOEL", f: ["NAVIDAD", "REGALOS", "BARBA", "TRINEO"] },
+            { w: "REYES MAGOS", f: ["CAMELLOS", "REGALOS", "ENERO", "TRES"] },
+            { w: "HALLOWEEN", f: ["NOCHE", "BRUJAS", "DULCES", "DISFRAZ"] },
+            { w: "PASCUA", f: ["HUEVO", "CHOCOLATE", "CONEJO", "DOMINGO"] },
+            { w: "CARNAVAL", f: ["DISFRAZ", "MASCARA", "FIESTA", "FEBRERO"] },
+            { w: "VERANO", f: ["CALOR", "PLAYA", "VACACIONES", "SOL"] },
+            { w: "INVIERNO", f: ["FRIO", "NIEVE", "ABRIGO", "LLUVIA"] },
+            { w: "OTOÑO", f: ["HOJAS", "CAER", "ARBOL", "ESTACION"] },
+            { w: "PRIMAVERA", f: ["FLORES", "ESTACION", "ALERGIA", "SOL"] },
+            { w: "LUNES", f: ["DIA", "SEMANA", "TRABAJO", "EMPEZAR"] },
+            { w: "VIERNES", f: ["SEMANA", "FIN", "DIA", "NOCHE"] },
+            { w: "DOMINGO", f: ["DIA", "FIN", "SEMANA", "ASADO"] },
+            { w: "ENERO", f: ["MES", "AÑO", "VERANO", "VACACIONES"] },
+            { w: "DICIEMBRE", f: ["MES", "AÑO", "NAVIDAD", "FIN"] },
+            { w: "FUTURO", f: ["TIEMPO", "MAÑANA", "PASADO", "ADELANTE"] },
+            { w: "PASADO", f: ["TIEMPO", "AYER", "HISTORIA", "ATRAS"] },
+            { w: "AMOR", f: ["SENTIMIENTO", "CORAZON", "PAREJA", "QUERER"] },
+            { w: "ODIO", f: ["SENTIMIENTO", "MALO", "ENEMIGO", "RABIA"] },
+            { w: "MIEDO", f: ["SUSTO", "OSCURIDAD", "TERROR", "GRITAR"] },
+            { w: "ALEGRIA", f: ["FELICIDAD", "RISA", "SONRISA", "BIEN"] },
+            { w: "TRISTEZA", f: ["LLORAR", "MAL", "PENA", "SENTIMIENTO"] },
+            { w: "ENOJO", f: ["BRONCA", "FURIA", "GRITAR", "MAL"] },
+            { w: "SUEÑO", f: ["DORMIR", "CAMA", "NOCHE", "CANSADO"] },
+            { w: "HAMBRE", f: ["COMER", "COMIDA", "ESTOMAGO", "APETITO"] },
+            { w: "SED", f: ["AGUA", "BEBER", "LIQUIDO", "GARGANTA"] },
+            { w: "FRIO", f: ["TEMPERATURA", "INVIERNO", "ABRIGO", "HELADO"] },
+            { w: "CALOR", f: ["TEMPERATURA", "VERANO", "SOL", "SUDAR"] },
+            { w: "DOLOR", f: ["LASTIMAR", "GOLPE", "SUFRIR", "HERIDA"] },
+            { w: "SALUD", f: ["BIEN", "MEDICO", "ENFERMEDAD", "CUERPO"] },
+            { w: "DINOSAURIO", f: ["EXTINTO", "JURASSIC", "GRANDE", "REPTIL"] },
+            { w: "ALIEN", f: ["OVNI", "ESPACIO", "EXTRATERRESTRE", "MARCIANO"] },
+            { w: "ROBOT", f: ["MAQUINA", "FUTURO", "METAL", "INTELIGENCIA"] },
+            { w: "COHETE", f: ["ESPACIO", "VOLAR", "LUNA", "NASA"] },
+            { w: "ASTRONAUTA", f: ["ESPACIO", "LUNA", "TRAJE", "NASA"] },
+            { w: "ESTRELLA", f: ["CIELO", "NOCHE", "BRILLAR", "FUGAZ"] },
+            { w: "PLANETA", f: ["TIERRA", "MARTE", "ESPACIO", "SOL"] },
+            { w: "COMETA", f: ["ESPACIO", "COLA", "ESTRELLA", "CIELO"] },
+            { w: "TELESCOPIO", f: ["MIRAR", "ESTRELLAS", "ESPACIO", "LEJOS"] },
+            { w: "CIENTIFICO", f: ["CIENCIA", "LABORATORIO", "BATA", "EXPERIMENTO"] },
+            { w: "MATEMATICA", f: ["NUMEROS", "SUMAR", "ESCUELA", "CUENTA"] },
+            { w: "HISTORIA", f: ["PASADO", "LIBRO", "ESCUELA", "FECHA"] },
+            { w: "GEOGRAFIA", f: ["MAPA", "PAIS", "MUNDO", "CAPITAL"] },
+            { w: "LENGUA", f: ["IDIOMA", "PALABRAS", "ESCRIBIR", "HABLAR"] },
+            { w: "INGLES", f: ["IDIOMA", "ESTADOS UNIDOS", "ESCUELA", "HELLO"] },
+            { w: "GIMNASIA", f: ["DEPORTE", "ESCUELA", "CORRER", "EDUCACION"] },
+            { w: "RECREO", f: ["ESCUELA", "JUGAR", "PATIO", "DESCANSO"] },
+            { w: "EXAMEN", f: ["PRUEBA", "ESCUELA", "ESTUDIAR", "NOTA"] },
+            { w: "PIZARRON", f: ["TIZA", "ESCUELA", "ESCRIBIR", "VERDE"] },
+            { w: "MOCHILA", f: ["ESCUELA", "LIBROS", "ESPALDA", "GUARDAR"] },
+            { w: "CUADERNO", f: ["ESCRIBIR", "HOJAS", "ESCUELA", "LAPIZ"] },
+            { w: "LAPIZ", f: ["ESCRIBIR", "GOMA", "DIBUJAR", "MADERA"] },
+            { w: "BIROME", f: ["TINTA", "ESCRIBIR", "LAPICERA", "AZUL"] },
+            { w: "GOMA", f: ["BORRAR", "LAPIZ", "ESCUELA", "ERROR"] },
+            { w: "REGLA", f: ["MEDIR", "RECTA", "ESCUELA", "CENTIMETROS"] },
+            { w: "TIJERA", f: ["CORTAR", "PAPEL", "ESCUELA", "FILO"] },
+            { w: "PLASTICOLA", f: ["PEGAR", "BLANCA", "ESCUELA", "PAPEL"] },
+            { w: "PAPEL", f: ["HOJA", "ESCRIBIR", "BLANCO", "CARTEL"] },
+            { w: "CARTA", f: ["SOBRE", "CORREO", "ESCRIBIR", "ENVIAR"] },
+            { w: "EMAIL", f: ["CORREO", "INTERNET", "COMPUTADORA", "MENSAJE"] },
+            { w: "WHATSAPP", f: ["MENSAJE", "CELULAR", "CHAT", "APP"] },
+            { w: "FACEBOOK", f: ["RED", "SOCIAL", "AMIGOS", "AZUL"] },
+            { w: "INSTAGRAM", f: ["FOTOS", "RED", "SOCIAL", "STORIES"] },
+            { w: "TIKTOK", f: ["VIDEO", "BAILE", "APP", "VIRAL"] },
+            { w: "YOUTUBE", f: ["VIDEO", "VER", "INTERNET", "CANAL"] },
+            { w: "GOOGLE", f: ["BUSCAR", "INTERNET", "PAGINA", "WEB"] },
+            { w: "WIFI", f: ["INTERNET", "CONEXION", "INALAMBRICO", "SEÑAL"] },
+            { w: "BATERIA", f: ["CARGA", "CELULAR", "ENERGIA", "PILAS"] },
+            { w: "CARGADOR", f: ["ENCHUFE", "CELULAR", "BATERIA", "CABLE"] },
+            { w: "AURICULARES", f: ["ESCUCHAR", "MUSICA", "OIDOS", "SONIDO"] },
+            { w: "TELEVISION", f: ["VER", "PANTALLA", "CONTROL", "CANAL"] },
+            { w: "CONTROL", f: ["REMOTO", "TELE", "BOTONES", "CAMBIAR"] },
+            { w: "SILLON", f: ["SENTARSE", "LIVING", "COMODO", "SOFA"] },
+            { w: "MESA", f: ["COMER", "SILLAS", "MUEBLE", "PATAS"] },
+            { w: "COCINA", f: ["COCINAR", "COMIDA", "LUGAR", "HORNO"] },
+            { w: "HELADERA", f: ["FRIO", "COMIDA", "GUARDAR", "HIELO"] },
+            { w: "HORNO", f: ["COCINAR", "CALOR", "COMIDA", "COCINA"] },
+            { w: "MICROONDAS", f: ["CALENTAR", "COMIDA", "RAPIDO", "COCINA"] },
+            { w: "LAVARROPAS", f: ["LAVAR", "ROPA", "SUCIA", "AGUA"] },
+            { w: "PLANCHA", f: ["ROPA", "CALOR", "ARRUGAS", "CAMISA"] },
+            { w: "ESCOBA", f: ["BARRER", "PISO", "LIMPIEZA", "BASURA"] },
+            { w: "TRAPO", f: ["LIMPIAR", "PISO", "SUCIO", "SECAR"] },
+            { w: "BALDE", f: ["AGUA", "LIMPIAR", "PLASTICO", "MANIJA"] },
+            { w: "BASURA", f: ["TIRAR", "SUCIO", "BOLSA", "TACHO"] },
+            { w: "LLAVE", f: ["ABRIR", "PUERTA", "CERRADURA", "METAL"] },
+            { w: "VENTANA", f: ["VIDRIO", "ABRIR", "VER", "CASA"] },
+            { w: "PUERTA", f: ["ENTRADA", "ABRIR", "CASA", "MADERA"] },
+            { w: "TECHO", f: ["ARRIBA", "CASA", "TAPAR", "LLUVIA"] },
+            { w: "PISO", f: ["SUELO", "CAMINAR", "ABAJO", "MADERA"] },
+            { w: "PARED", f: ["MURO", "CASA", "LADRILLO", "PINTURA"] },
+            { w: "TIMBRE", f: ["TOCAR", "PUERTA", "SONIDO", "CASA"] },
+            { w: "BUZON", f: ["CARTAS", "CORREO", "CASA", "ENTRADA"] },
+            { w: "AUTO", f: ["COCHE", "MANEJAR", "RUEDAS", "MOTOR"] },
+            { w: "MOTO", f: ["CASCO", "DOS", "RUEDAS", "MOTOR"] },
+            { w: "COLECTIVO", f: ["BONDI", "TRANSPORTE", "PASAJEROS", "SUBE"] },
+            { w: "TAXI", f: ["AUTO", "AMARILLO", "CHOFER", "VIAJE"] },
+            { w: "UBER", f: ["AUTO", "APP", "VIAJE", "PEDIR"] },
+            { w: "AVION", f: ["VOLAR", "AIRE", "VIAJE", "AEROPUERTO"] },
+            { w: "BARCO", f: ["AGUA", "MAR", "NAVEGAR", "BOTE"] },
+            { w: "SUBTE", f: ["TREN", "ABAJO", "ESTACION", "TRANSPORTE"] },
+            { w: "SEMAFORO", f: ["LUCES", "ROJO", "VERDE", "CALLE"] },
+            { w: "CALLE", f: ["AUTOS", "VEREDA", "CAMINAR", "CRUZAR"] },
+            { w: "VEREDA", f: ["CAMINAR", "CALLE", "PEATON", "BALDOSAS"] },
+            { w: "ESQUINA", f: ["CALLE", "CRUZAR", "DOBLAR", "INTERSECCION"] },
+            { w: "PLAZA", f: ["JUEGOS", "PARQUE", "ARBOLES", "NIÑOS"] },
+            { w: "HAMACA", f: ["PLAZA", "JUEGO", "BALANCEAR", "NIÑOS"] },
+            { w: "TOBOGAN", f: ["BAJAR", "PLAZA", "JUEGO", "DESLIZAR"] },
+            { w: "SUBEIB AJA", f: ["PLAZA", "JUEGO", "DOS", "EQUILIBRIO"] },
+            { w: "ARENERO", f: ["ARENA", "PLAZA", "JUGAR", "NIÑOS"] },
+            { w: "FUTBOL", f: ["PELOTA", "GOL", "CANCHA", "JUGAR"] },
+            { w: "TENIS", f: ["RAQUETA", "PELOTA", "RED", "PARTIDO"] },
+            { w: "BASQUET", f: ["PELOTA", "ARO", "PICAR", "NBA"] },
+            { w: "VOLEY", f: ["RED", "PELOTA", "MANOS", "PLAYA"] },
+            { w: "RUGBY", f: ["HUEVO", "TACKLE", "PUMA", "DEPORTE"] },
+            { w: "BOXEO", f: ["GUANTES", "PELEAR", "RING", "GOLPE"] },
+            { w: "NATACION", f: ["AGUA", "NADAR", "PILETA", "DEPORTE"] },
+            { w: "CORRER", f: ["RAPIDO", "PIERNAS", "CANSAR", "DEPORTE"] },
+            { w: "GOLF", f: ["PALO", "HOYO", "PELOTA", "VERDE"] },
+            { w: "PING PONG", f: ["MESA", "PALETA", "CHICA", "TENIS"] },
+            { w: "GIMNASIO", f: ["PESAS", "ENTRENAR", "MUSCULOS", "DEPORTE"] },
+            { w: "YOGA", f: ["RELAX", "ESTIRAR", "MAT", "POSE"] },
+            { w: "KARATE", f: ["CINTURON", "GOLPE", "KIMONO", "ARTE"] },
+            { w: "PATIN", f: ["RUEDAS", "DESLIZAR", "PIE", "DEPORTE"] },
+            { w: "SKATE", f: ["TABLA", "RUEDAS", "TRUCOS", "CALLE"] },
+            { w: "SURF", f: ["TABLA", "OLAS", "MAR", "PLAYA"] },
+            { w: "ESQUI", f: ["NIEVE", "MONTAÑA", "BAJAR", "DEPORTE"] },
+            { w: "COPA", f: ["GANAR", "PREMIO", "MUNDIAL", "TROFEO"] },
+            { w: "MEDALLA", f: ["GANAR", "ORO", "PREMIO", "OLIMPICO"] },
+            { w: "CAMPEON", f: ["GANADOR", "PRIMERO", "COPA", "MEJOR"] },
+            { w: "ARBITRO", f: ["JUEZ", "SILBATO", "TARJETA", "PARTIDO"] },
+            { w: "HINCHADA", f: ["GENTE", "CANCHA", "GRITAR", "EQUIPO"] },
+            { w: "CAMISETA", f: ["ROPA", "EQUIPO", "FUTBOL", "NUMERO"] },
+            { w: "ZAPATILLA", f: ["PIE", "CORDONES", "DEPORTE", "CORRER"] },
+            { w: "SHORT", f: ["PANTALON", "CORTO", "PIERNAS", "VERANO"] },
+            { w: "MEDIAS", f: ["PIES", "ZAPATOS", "LANA", "PAR"] },
+            { w: "BUZO", f: ["ABRIGO", "FRIO", "ROPA", "INVIERNO"] },
+            { w: "CAMPERA", f: ["ABRIGO", "FRIO", "CIERRE", "INVIERNO"] },
+            { w: "BUFANDA", f: ["CUELLO", "LANA", "FRIO", "ABRIGO"] },
+            { w: "GUANTES", f: ["MANOS", "FRIO", "DEDOS", "LANA"] },
+            { w: "GORRO", f: ["CABEZA", "LANA", "FRIO", "INVIERNO"] },
+            { w: "JEAN", f: ["PANTALON", "AZUL", "TELA", "ROPA"] },
+            { w: "VESTIDO", f: ["MUJER", "ROPA", "LARGO", "FIESTA"] },
+            { w: "POLLERA", f: ["MUJER", "ROPA", "CORTA", "PIERNAS"] },
+            { w: "TRAJE", f: ["HOMBRE", "FIESTA", "ELEGANTE", "CORBATA"] },
+            { w: "CORBATA", f: ["CUELLO", "TRAJE", "NUDO", "CAMISA"] },
+            { w: "CINTURON", f: ["PANTALON", "CUERO", "CINTURA", "AJUSTAR"] },
+            { w: "PIYAMA", f: ["DORMIR", "ROPA", "NOCHE", "CAMA"] },
+            { w: "MALLA", f: ["PILETA", "PLAYA", "NADAR", "BIKINI"] },
+            { w: "TOALLA", f: ["SECAR", "BAÑO", "MOJADO", "PLAYA"] },
+            { w: "ANTEOJOS", f: ["VER", "OJOS", "SOL", "LENTES"] },
+            { w: "RELOJ", f: ["HORA", "MUÑECA", "TIEMPO", "MANO"] },
+            { w: "AROS", f: ["OREJAS", "JOYA", "MUJER", "PENDIENTES"] },
+            { w: "COLLAR", f: ["CUELLO", "JOYA", "CADENA", "COLGANTE"] },
+            { w: "PULSERA", f: ["MUÑECA", "MANO", "JOYA", "PLATA"] },
+            { w: "MAQUILLAJE", f: ["CARA", "PINTAR", "MUJER", "LABIOS"] },
+            { w: "PERFUME", f: ["OLOR", "RICO", "FRASCO", "CUELLO"] },
+            { w: "CREMA", f: ["PIEL", "CUERPO", "CARA", "MANOS"] },
+            { w: "SHAMPOO", f: ["PELO", "LAVAR", "CABEZA", "BAÑO"] },
+            { w: "JABON", f: ["MANOS", "LAVAR", "CUERPO", "BAÑO"] },
+            { w: "CEPILLO", f: ["DIENTES", "PELO", "LAVAR", "PEINAR"] },
+            { w: "PASTA", f: ["DIENTES", "CEPILLO", "BOCA", "LAVAR"] },
+            { w: "TOALLITA", f: ["PAPEL", "MANOS", "LIMPIAR", "BAÑO"] },
+            { w: "PAPEL", f: ["HIGIENICO", "BAÑO", "ROLLO", "LIMPIAR"] },
+            { w: "ESPEJO", f: ["VER", "REFLEJO", "CARA", "BAÑO"] }
+        ];
+
+        // --- ESTADO ---
+        let state = {
+            timeLimit: 60,
+            scores: [0, 0],
+            currentTeam: 0,
+            deck: [],
+            currentCard: null,
+            timer: null,
+            timeLeft: 0,
+            isPlaying: false,
+            
+            // Configuración
+            teamNames: ["EQUIPO 1", "EQUIPO 2"],
+            roundsPerTeam: 3, 
+            roundsPlayed: [0, 0] 
+        };
+
+        const SFX = {
+            ctx: null,
+            init: function(){ if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
+            play: function(t){
+                if(!this.ctx) return;
+                if(this.ctx.state==='suspended') this.ctx.resume();
+                const c=this.ctx.currentTime, o=this.ctx.createOscillator(), g=this.ctx.createGain();
+                o.connect(g); g.connect(this.ctx.destination);
+                if(t==='ok'){
+                    o.type='sine'; o.frequency.setValueAtTime(600,c); o.frequency.linearRampToValueAtTime(1000,c+0.1);
+                    g.gain.value=0.1; o.start(c); o.stop(c+0.2);
+                } else if(t==='skip'){
+                    o.type='sawtooth'; o.frequency.setValueAtTime(150,c); o.frequency.linearRampToValueAtTime(100,c+0.2);
+                    g.gain.value=0.1; o.start(c); o.stop(c+0.2);
+                } else if(t==='end'){
+                    o.type='square'; o.frequency.setValueAtTime(400,c); 
+                    g.gain.setValueAtTime(0.1,c); g.gain.linearRampToValueAtTime(0,c+1);
+                    o.start(c); o.stop(c+1);
+                } else if(t==='win'){ 
+                     o.type='triangle'; 
+                     o.frequency.setValueAtTime(400,c); o.frequency.linearRampToValueAtTime(800,c+0.2);
+                     o.frequency.linearRampToValueAtTime(600,c+0.4); o.frequency.linearRampToValueAtTime(1000,c+0.6);
+                     g.gain.value=0.1; o.start(c); o.stop(c+1);
+                }
+            }
+        };
+
+        // --- CONFIGURACIÓN ---
+        function setTime(t, btn) {
+            state.timeLimit = t;
+            btn.parentNode.querySelectorAll('.btn-time').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+        }
+        
+        function adjustRounds(delta) {
+            const input = document.getElementById('roundsInput');
+            let val = parseInt(input.value) + delta;
+            if (val < 1) val = 1;
+            input.value = val;
+            state.roundsPerTeam = val;
+        }
+
+        function startMatch() {
+            SFX.init();
+            
+            state.teamNames[0] = document.getElementById('name1').value || "EQUIPO 1";
+            state.teamNames[1] = document.getElementById('name2').value || "EQUIPO 2";
+            
+            // Leemos el valor del input numérico
+            const rInput = parseInt(document.getElementById('roundsInput').value);
+            state.roundsPerTeam = rInput > 0 ? rInput : 1;
+
+            state.scores = [0, 0];
+            state.roundsPlayed = [0, 0];
+            state.currentTeam = 0;
+            state.deck = [...DB].sort(() => Math.random() - 0.5);
+            
+            showPreRound();
+        }
+
+        function showPreRound() {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('screen-pre').classList.add('active');
+            
+            const name = state.teamNames[state.currentTeam];
+            const color = state.currentTeam === 0 ? "#9b59b6" : "#3498db";
+            const roundNum = state.roundsPlayed[state.currentTeam] + 1;
+            
+            document.getElementById('team-turn-name').innerText = name;
+            document.getElementById('team-turn-name').style.color = color;
+            document.getElementById('round-tracker').innerText = `RONDA ${roundNum}`;
+        }
+
+        function startRound() {
+            document.getElementById('screen-pre').classList.remove('active');
+            document.getElementById('screen-game').classList.add('active');
+            
+            const name = state.teamNames[state.currentTeam];
+            const shortName = name.length > 6 ? name.substring(0,5)+".." : name;
+            const color = state.currentTeam === 0 ? "#9b59b6" : "#3498db";
+
+            document.getElementById('game-team-name').innerText = shortName;
+            document.getElementById('game-team-name').style.borderColor = color;
+            document.getElementById('game-team-name').style.color = color;
+            
+            state.timeLeft = state.timeLimit;
+            state.isPlaying = true;
+            updateTimerUI();
+            
+            nextCard();
+            
+            state.timer = setInterval(() => {
+                state.timeLeft--;
+                updateTimerUI();
+                if(state.timeLeft <= 0) endRound();
+            }, 1000);
+        }
+
+        function nextCard() {
+            if(state.deck.length === 0) state.deck = [...DB].sort(() => Math.random() - 0.5);
+            state.currentCard = state.deck.pop();
+            renderCard(state.currentCard);
+            document.getElementById('current-card').className = 'card';
+        }
+
+        function renderCard(card) {
+            document.getElementById('word-target').innerText = card.w;
+            const list = document.getElementById('forbidden-list');
+            list.innerHTML = '';
+            card.f.forEach(w => {
+                const el = document.createElement('div');
+                el.className = 'forbidden-word';
+                el.innerText = w;
+                list.appendChild(el);
+            });
+        }
+
+        function handleCard(success) {
+            if(!state.isPlaying) return;
+            const cardEl = document.getElementById('current-card');
+            
+            if(success) {
+                SFX.play('ok');
+                state.scores[state.currentTeam]++;
+                cardEl.classList.add('swiping-right'); 
+            } else {
+                SFX.play('skip');
+                cardEl.classList.add('swiping-left'); 
+            }
+            setTimeout(() => nextCard(), 200);
+        }
+
+        function updateTimerUI() {
+            const el = document.getElementById('timer');
+            el.innerText = state.timeLeft;
+            if(state.timeLeft <= 10) el.classList.add('hurry');
+            else el.classList.remove('hurry');
+        }
+
+        function endRound() {
+            clearInterval(state.timer);
+            state.isPlaying = false;
+            SFX.play('end');
+            
+            state.roundsPlayed[state.currentTeam]++;
+            
+            document.getElementById('screen-game').classList.remove('active');
+            document.getElementById('screen-score').classList.add('active');
+            
+            document.getElementById('lbl-sc-1').innerText = state.teamNames[0];
+            document.getElementById('score-1').innerText = state.scores[0];
+            document.getElementById('rd-status-1').innerText = `Rondas: ${state.roundsPlayed[0]}/${state.roundsPerTeam}`;
+
+            document.getElementById('lbl-sc-2').innerText = state.teamNames[1];
+            document.getElementById('score-2').innerText = state.scores[1];
+            document.getElementById('rd-status-2').innerText = `Rondas: ${state.roundsPlayed[1]}/${state.roundsPerTeam}`;
+        }
+
+        function nextTurn() {
+            if(state.roundsPlayed[0] >= state.roundsPerTeam && state.roundsPlayed[1] >= state.roundsPerTeam) {
+                showFinalResults();
+            } else {
+                let next = state.currentTeam === 0 ? 1 : 0;
+                if(state.roundsPlayed[next] >= state.roundsPerTeam) {
+                   // Si el otro ya terminó, sigue el actual si le quedan
+                } else {
+                    state.currentTeam = next;
+                }
+                showPreRound();
+            }
+        }
+
+        function showFinalResults() {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('screen-end').classList.add('active');
+            SFX.play('win');
+
+            const s1 = state.scores[0];
+            const s2 = state.scores[1];
+            let winner = "EMPATE";
+            
+            if(s1 > s2) winner = state.teamNames[0];
+            else if(s2 > s1) winner = state.teamNames[1];
+
+            document.getElementById('winner-name').innerText = winner;
+            document.getElementById('final-score-txt').innerText = `${state.teamNames[0]}: ${s1} - ${state.teamNames[1]}: ${s2}`;
+        }
+
+    </script>
+</body>
+</html>
