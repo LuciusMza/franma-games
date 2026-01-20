@@ -18,7 +18,7 @@
         .active { display: flex; animation: fadeIn 0.3s; }
         @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
 
-        /* --- HOME REDISEÑADO --- */
+        /* --- HOME --- */
         .logo-box { position: relative; width: 100px; height: 100px; margin-bottom: 20px; animation: float 3s ease-in-out infinite; }
         .logo-die { font-size: 5rem; position: absolute; text-shadow: 0 10px 20px rgba(0,0,0,0.5); }
         .d1 { transform: rotate(-15deg) translate(-20px, 0); color: var(--gold); z-index: 2; }
@@ -27,7 +27,6 @@
         h1 { font-size: 3.5rem; margin: 0; color: var(--gold); text-shadow: 4px 4px 0 #000; text-transform: uppercase; letter-spacing: 2px; line-height: 1; }
         .subtitle { color: #bdc3c7; font-size: 0.9rem; letter-spacing: 4px; margin-bottom: 30px; font-weight: bold; }
 
-        /* ICONOS SUPERIORES */
         .top-bar { position: absolute; top: 20px; right: 20px; display: flex; gap: 15px; z-index: 50; }
         .icon-btn { 
             background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.2); 
@@ -45,7 +44,6 @@
         .p-btn { width: 50px; height: 50px; border-radius: 12px; border: 2px solid #555; background: transparent; color: #aaa; font-size: 1.2rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .p-btn.selected { background: var(--gold); color: #2c3e50; border-color: var(--gold); box-shadow: 0 0 15px rgba(241, 196, 15, 0.4); transform: scale(1.1); }
 
-        /* INPUTS NOMBRES */
         #names-container { display: flex; flex-direction: column; gap: 10px; width: 85%; max-width: 320px; }
         .name-row { display: flex; align-items: center; background: rgba(255,255,255,0.05); border-radius: 10px; padding: 5px 15px; border: 1px solid rgba(255,255,255,0.1); }
         .name-label { color: var(--gold); font-weight: bold; margin-right: 10px; font-size: 0.8rem; }
@@ -54,7 +52,6 @@
         /* MESA DE JUEGO */
         #game-area { width: 100%; flex: 1; background: var(--felt); display: flex; flex-direction: column; position: relative; padding: 10px; box-shadow: inset 0 0 80px rgba(0,0,0,0.6); }
         
-        /* HEADER */
         .header { display: flex; justify-content: space-between; align-items: center; padding: 8px 15px; background: rgba(0,0,0,0.4); border-radius: 15px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.1); }
         .turn-badge { background: #2c3e50; padding: 5px 15px; border-radius: 20px; font-weight: bold; border: 1px solid #7f8c8d; max-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 5px; }
         .turn-icon { color: var(--gold); }
@@ -62,7 +59,6 @@
         .rolls-left { font-size: 0.9rem; color: #ddd; font-weight: bold; }
         .btn-mini { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px; width: 40px; height: 40px; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-        /* DADOS */
         .dice-container { display: flex; justify-content: center; gap: 8px; margin: 10px 0; perspective: 1000px; flex-wrap: wrap; min-height: 70px; }
         .die { width: 58px; height: 58px; background: var(--dice); border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); display: grid; grid-template-areas: "a . c" "e g f" "h . i"; padding: 5px; cursor: pointer; transition: transform 0.2s; position: relative; }
         .dot { display: block; width: 10px; height: 10px; background: var(--dot); border-radius: 50%; align-self: center; justify-self: center; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5); }
@@ -77,7 +73,6 @@
         .dot:nth-child(5) { grid-area: h; } .dot:nth-child(6) { grid-area: i; } 
         .dot.center { grid-area: g; }       
 
-        /* CONTROL DECLARACIÓN */
         .flip-setup { 
             background: rgba(0,0,0,0.4); padding: 8px 15px; border-radius: 15px; margin-bottom: 5px;
             display: flex; flex-direction: column; align-items: center; gap: 5px; border: 1px solid rgba(255,255,255,0.1);
@@ -86,35 +81,50 @@
         .btn-inc { width: 35px; height: 35px; border-radius: 50%; border: 2px solid white; background: transparent; color: white; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .flip-val { font-size: 1.8rem; font-weight: bold; font-family: monospace; color: var(--gold); width: 30px; text-align: center; }
 
-        /* PLANILLA */
-        #score-sheet { flex: 1; overflow-y: auto; background: #fff; border-radius: 15px 15px 0 0; padding: 15px; margin: 0 -10px; display: none; position: relative; z-index: 40; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); }
+        /* PLANILLA (SCROLL FIX) */
+        #score-sheet { 
+            flex: 1; /* Ocupa el espacio restante */
+            overflow-y: auto; /* Permite scroll */
+            -webkit-overflow-scrolling: touch; /* Scroll suave en iOS */
+            background: #fff; 
+            border-radius: 15px 15px 0 0; 
+            padding: 15px; 
+            margin: 0 -10px; 
+            display: none; 
+            z-index: 40; 
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.5); 
+        }
         .score-row { display: flex; justify-content: space-between; padding: 12px 5px; border-bottom: 1px solid #eee; align-items: center; }
         .cat-name { font-weight: 700; color: #34495e; font-size: 1.1rem; }
         
         .cat-btn { background: #ecf0f1; border: 2px solid #bdc3c7; padding: 8px 18px; border-radius: 12px; font-weight: 900; color: #7f8c8d; cursor: pointer; transition: 0.2s; font-size: 1rem; min-width: 50px; }
-        
-        /* ESTADOS BOTONES PLANILLA */
         .cat-btn.selectable { background: white; color: #3498db; border-color: #3498db; }
         .cat-btn.selected-candidate { background: var(--gold); color: #2c3e50; border-color: #f39c12; transform: scale(1.1); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         .cat-btn.filled { background: transparent; border: none; color: #2c3e50; font-size: 1.3rem; cursor: default; }
         .cat-btn.disabled { opacity: 0.4; cursor: default; filter: grayscale(1); }
 
-        /* BOTÓN CONFIRMAR EN PLANILLA (CORREGIDO Z-INDEX) */
-        #confirm-wrapper { position: absolute; bottom: 20px; left: 0; width: 100%; display: flex; justify-content: center; pointer-events: none; opacity: 0; transition: 0.3s; z-index: 100; }
-        #confirm-wrapper.visible { pointer-events: auto; opacity: 1; transform: translateY(-10px); }
+        /* BOTÓN CONFIRMAR FLOTANTE (FUERA DE PLANILLA) */
+        #confirm-floater { 
+            position: absolute; 
+            bottom: 85px; /* Encima de los controles inferiores */
+            left: 0; width: 100%; 
+            display: flex; justify-content: center; 
+            pointer-events: none; opacity: 0; transition: 0.3s; z-index: 100; 
+        }
+        #confirm-floater.visible { pointer-events: auto; opacity: 1; transform: translateY(-5px); }
         .btn-confirm { background: var(--gold); color: #2c3e50; border: none; padding: 12px 40px; border-radius: 30px; font-weight: 900; font-size: 1.1rem; box-shadow: 0 10px 20px rgba(0,0,0,0.4); cursor: pointer; animation: pulse 1s infinite; }
 
         /* CONTROLES */
-        .controls { display: flex; gap: 10px; justify-content: center; padding-bottom: 20px; margin-top: 10px; }
+        .controls { display: flex; gap: 10px; justify-content: center; padding-bottom: 20px; margin-top: 10px; z-index: 50; position: relative; }
         .btn-roll { background: #e74c3c; width: 100%; max-width: 300px; box-shadow: 0 5px 0 #c0392b; }
         .btn-score { background: #3498db; width: 100%; max-width: 300px; box-shadow: 0 5px 0 #2980b9; }
 
         #msg-area { text-align:center; color:rgba(255,255,255,0.8); font-size:1rem; min-height:25px; margin-bottom:10px; font-weight: bold; display: block; }
         .msg-alert { color: var(--gold) !important; text-shadow: 0 2px 4px rgba(0,0,0,0.5); font-size: 1.2rem !important; animation: pulse 0.5s infinite; }
 
-        /* MODALES (AYUDA / OPCIONES) */
+        /* MODALES */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(5px); }
-        .modal-card { background: #fff; width: 100%; max-width: 350px; padding: 25px; border-radius: 20px; text-align: left; color: #333; position: relative; animation: popIn 0.3s; }
+        .modal-card { background: #fff; width: 100%; max-width: 350px; padding: 25px; border-radius: 20px; text-align: left; color: #333; position: relative; animation: popIn 0.3s; max-height: 80vh; overflow-y: auto; }
         .modal-title { margin: 0 0 15px 0; color: var(--bg); font-size: 1.5rem; text-align: center; text-transform: uppercase; border-bottom: 2px solid #eee; padding-bottom: 10px; }
         
         .opt-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-weight: bold; font-size: 1.1rem; }
@@ -123,7 +133,6 @@
         .toggle-switch.active { background: var(--felt); }
         .toggle-switch.active::after { left: 24px; }
 
-        /* WIN */
         #modal-win { background: rgba(0,0,0,0.95); z-index: 60; text-align: center; }
         .trophy { font-size: 6rem; margin-bottom: 20px; animation: bounce 1s infinite; }
 
@@ -141,9 +150,9 @@
             <h2 class="modal-title">CÓMO JUGAR</h2>
             <ul style="padding-left: 20px; line-height: 1.6;">
                 <li><b>1. Tira:</b> Tienes 3 tiros por turno.</li>
-                <li><b>2. Elige:</b> Toca los dados para guardarlos.</li>
-                <li><b>3. Anota:</b> Busca el mejor juego (Escalera, Full, Poker, Generala).</li>
-                <li><b>4. Obligada (Opcional):</b> Antes de tirar, di cuántos vas a dar vuelta. ¡Debes cumplirlo!</li>
+                <li><b>2. Elige:</b> Toca los dados para guardarlos (🔒).</li>
+                <li><b>3. Anota:</b> Toca "ANOTAR" y elige tu juego. Confirma para guardar.</li>
+                <li><b>4. Obligada:</b> Antes de tirar, usa el contador (+) para decir cuántos vas a dar vuelta. ¡Es obligatorio!</li>
             </ul>
             <button class="btn" style="width:100%; font-size:1rem; padding:10px; margin-top:10px;" onclick="toggleHelp()">ENTENDIDO</button>
         </div>
@@ -161,7 +170,7 @@
                 <span>🔄 Modo Obligado</span>
                 <div class="toggle-switch active" id="sw-obliged" onclick="toggleSetting('obliged')"></div>
             </div>
-            <p style="font-size:0.8rem; color:#888; text-align:center; margin-top:5px;">Habilita el recuadro para declarar vueltas.</p>
+            <p style="font-size:0.8rem; color:#888; text-align:center; margin-top:5px;">Activa el panel para declarar dados a dar vuelta.</p>
 
             <button class="btn" style="width:100%; font-size:1rem; padding:10px; margin-top:20px;" onclick="toggleOptions()">LISTO</button>
         </div>
@@ -225,9 +234,10 @@
             <div id="msg-area">...</div>
 
             <div id="score-sheet">
-                <div id="confirm-wrapper">
-                    <button class="btn-confirm" onclick="confirmSelection()">CONFIRMAR</button>
                 </div>
+            
+            <div id="confirm-floater">
+                <button class="btn-confirm" onclick="confirmSelection()">CONFIRMAR</button>
             </div>
 
             <div class="controls">
@@ -278,7 +288,7 @@
 
         let settings = {
             sound: true,
-            obliged: true // Por defecto activada la regla de casa
+            obliged: true
         };
 
         let playerCount = 1;
@@ -297,7 +307,7 @@
             }
         };
 
-        // --- UI HOME ---
+        // --- UI ---
         function setPlayers(n, btn) {
             playerCount = n;
             document.querySelectorAll('.p-btn').forEach(b => b.classList.remove('selected'));
@@ -315,7 +325,6 @@
             }
         }
 
-        // --- MODALES ---
         function toggleHelp() {
             const el = document.getElementById('modal-help');
             el.style.display = el.style.display === 'flex' ? 'none' : 'flex';
@@ -391,9 +400,7 @@
 
             setTimeout(() => {
                 state.dice = state.dice.map((val, i) => state.held[i] ? val : Math.ceil(Math.random() * 6));
-                
                 diceEls.forEach(el => el.classList.remove('rolling'));
-                
                 state.rollsLeft--;
                 state.isRolling = false;
                 
@@ -452,11 +459,11 @@
             const diceRack = document.getElementById('dice-rack');
             const scoreSheet = document.getElementById('score-sheet');
             const rollsInfo = document.getElementById('rolls-info');
-            const confirmWrapper = document.getElementById('confirm-wrapper');
+            const confirmFloater = document.getElementById('confirm-floater');
 
             rollsInfo.innerText = `TIROS: ${state.rollsLeft}`;
 
-            // PLANILLA
+            // PLANILLA ACTIVA
             if (scoreSheet.style.display === 'block') {
                 diceRack.style.display = 'none';
                 flipArea.style.display = 'none';
@@ -466,20 +473,20 @@
                 if (state.viewMode) {
                     btnAnotar.style.display = 'block';
                     btnAnotar.innerText = "VOLVER";
-                    confirmWrapper.classList.remove('visible');
+                    confirmFloater.classList.remove('visible');
                 } else {
                     btnAnotar.style.display = 'block';
                     btnAnotar.innerText = "VOLVER A TIRAR";
                     if (state.rollsLeft === 0) btnAnotar.style.display = 'none';
                     
-                    if (state.tempSelection) confirmWrapper.classList.add('visible');
-                    else confirmWrapper.classList.remove('visible');
+                    if (state.tempSelection) confirmFloater.classList.add('visible');
+                    else confirmFloater.classList.remove('visible');
                 }
                 return;
             } else {
                 diceRack.style.display = 'flex';
                 msgArea.style.display = 'block'; 
-                confirmWrapper.classList.remove('visible');
+                confirmFloater.classList.remove('visible');
             }
 
             if (state.isRolling) {
@@ -499,7 +506,6 @@
             }
 
             msgArea.classList.remove('msg-alert');
-            // Mostrar flip area solo si está activa en opciones
             flipArea.style.display = settings.obliged ? 'flex' : 'none'; 
             
             if (state.rollsLeft === 3) {
@@ -566,8 +572,6 @@
             const isServida = (state.rollsLeft === 2); 
 
             const sheet = document.getElementById('score-sheet');
-            // Mantener el botón confirmar al final
-            const confirmBtnHTML = `<div id="confirm-wrapper"><button class="btn-confirm" onclick="confirmSelection()">CONFIRMAR</button></div>`;
             
             let html = `<h3 style="color:#333; margin-top:0; text-align:center; margin-bottom:10px;">${state.players[state.currentPlayer]}</h3>`;
 
@@ -609,13 +613,7 @@
                              }
                         }
                     }
-                }
-
-                // Generar HTML de la fila
-                let btnHtml = '';
-                if (currentScore !== undefined) {
-                    btnHtml = `<span class="cat-btn filled">${currentScore}</span>`;
-                } else {
+                    
                     let btnClass = 'cat-btn selectable';
                     if (state.viewMode) btnClass = 'cat-btn disabled';
                     if (state.tempSelection && state.tempSelection.id === cat.id) btnClass = 'cat-btn selected-candidate';
@@ -623,8 +621,9 @@
                     const valToShow = (canScore && potential > 0) ? potential : 'X';
                     const scoreToSave = (canScore && potential > 0) ? potential : 0;
                     
-                    // Alerta: pasar selectScore como string en onclick
                     btnHtml = `<button class="${btnClass}" onclick="selectScore('${cat.id}', ${scoreToSave})">${valToShow}</button>`;
+                } else {
+                    btnHtml = `<span class="cat-btn filled">${currentScore}</span>`;
                 }
 
                 html += `
@@ -635,9 +634,8 @@
                 `;
             });
             
-            // Espacio final para el botón flotante
-            html += `<div style="height:60px;"></div>`;
-            html += confirmBtnHTML;
+            // Espacio extra al final para que el botón flotante no tape nada
+            html += `<div style="height: 80px;"></div>`;
             
             sheet.innerHTML = html;
         }
