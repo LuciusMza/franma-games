@@ -10,8 +10,8 @@
     
     <style>
         :root { --bg: #2c3e50; --felt: #27ae60; --dice: #ecf0f1; --dot: #2c3e50; --gold: #f1c40f; --purple: #9b59b6; --red: #e74c3c; }
-        * { box-sizing: border-box; touch-action: manipulation; user-select: none; }
-        body { margin: 0; height: 100vh; background: var(--bg); font-family: 'Roboto', sans-serif; display: flex; flex-direction: column; overflow: hidden; color: white; }
+        * { box-sizing: border-box; touch-action: manipulation; user-select: none; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; height: 100dvh; background: var(--bg); font-family: 'Roboto', sans-serif; display: flex; flex-direction: column; overflow: hidden; color: white; }
 
         /* PANTALLAS */
         .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; position: absolute; top:0; left:0; z-index: 10; background: var(--bg); }
@@ -44,28 +44,30 @@
         .p-btn { width: 50px; height: 50px; border-radius: 12px; border: 2px solid #555; background: transparent; color: #aaa; font-size: 1.2rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .p-btn.selected { background: var(--gold); color: #2c3e50; border-color: var(--gold); box-shadow: 0 0 15px rgba(241, 196, 15, 0.4); transform: scale(1.1); }
 
-        #names-container { display: flex; flex-direction: column; gap: 10px; width: 85%; max-width: 320px; max-height: 200px; overflow-y: auto; }
+        #names-container { display: flex; flex-direction: column; gap: 10px; width: 85%; max-width: 320px; max-height: 25vh; overflow-y: auto; }
         .name-row { display: flex; align-items: center; background: rgba(255,255,255,0.05); border-radius: 10px; padding: 5px 15px; border: 1px solid rgba(255,255,255,0.1); }
         .name-label { color: var(--gold); font-weight: bold; margin-right: 10px; font-size: 0.8rem; }
         .name-input { background: transparent; border: none; color: white; padding: 10px; font-size: 1rem; flex: 1; outline: none; }
 
         /* MESA DE JUEGO */
-        #game-area { width: 100%; flex: 1; background: var(--felt); display: flex; flex-direction: column; position: relative; padding: 10px; box-shadow: inset 0 0 80px rgba(0,0,0,0.6); overflow: hidden; }
+        #game-area { width: 100%; height: 100%; background: var(--felt); display: flex; flex-direction: column; position: relative; padding: 10px; padding-bottom: calc(10px + env(safe-area-inset-bottom)); box-shadow: inset 0 0 80px rgba(0,0,0,0.6); overflow: hidden; }
         
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 8px 15px; background: rgba(0,0,0,0.4); border-radius: 15px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.1); flex-shrink: 0; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 8px 15px; background: rgba(0,0,0,0.4); border-radius: 15px; margin-bottom: 5px; border: 1px solid rgba(255,255,255,0.1); flex-shrink: 0; }
         .turn-badge { background: #2c3e50; padding: 5px 15px; border-radius: 20px; font-weight: bold; border: 1px solid #7f8c8d; max-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 5px; }
         .turn-icon { color: var(--gold); }
         .header-right { display: flex; align-items: center; gap: 10px; }
         .rolls-left { font-size: 0.9rem; color: #ddd; font-weight: bold; }
         .btn-mini { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px; width: 40px; height: 40px; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-        /* DADOS */
-        .dice-container { display: flex; justify-content: center; gap: 8px; margin: 10px 0; perspective: 1000px; flex-wrap: wrap; min-height: 70px; flex-shrink: 0; }
-        .die { width: 58px; height: 58px; background: var(--dice); border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); display: grid; grid-template-areas: "a . c" "e g f" "h . i"; padding: 5px; cursor: pointer; transition: transform 0.2s; position: relative; }
-        .dot { display: block; width: 10px; height: 10px; background: var(--dot); border-radius: 50%; align-self: center; justify-self: center; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5); }
+        /* ZONA DADOS */
+        #dice-zone { flex: 1; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
+
+        .dice-container { display: flex; justify-content: center; gap: 8px; margin: 10px 0; perspective: 1000px; flex-wrap: wrap; }
+        .die { width: 14vw; height: 14vw; max-width: 60px; max-height: 60px; background: var(--dice); border-radius: 15%; box-shadow: 0 5px 15px rgba(0,0,0,0.3); display: grid; grid-template-areas: "a . c" "e g f" "h . i"; padding: 8%; cursor: pointer; transition: transform 0.2s; position: relative; }
+        .dot { display: block; width: 100%; height: 100%; background: var(--dot); border-radius: 50%; align-self: center; justify-self: center; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5); }
         
         .die.held { transform: translateY(-10px); box-shadow: 0 20px 30px rgba(0,0,0,0.5); border: 3px solid var(--gold); }
-        .die.held::after { content: '🔒'; position: absolute; bottom: -22px; left: 50%; transform: translateX(-50%); font-size: 14px; text-shadow: 0 2px 2px black; }
+        .die.held::after { content: '🔒'; position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); font-size: 12px; text-shadow: 0 2px 2px black; }
         .die.rolling { animation: shake 0.5s infinite; pointer-events: none; }
         .die.flip-target { border: 4px solid var(--purple); animation: pulse 1s infinite; transform: scale(1.1); box-shadow: 0 0 20px var(--purple); }
 
@@ -74,68 +76,40 @@
         .dot:nth-child(5) { grid-area: h; } .dot:nth-child(6) { grid-area: i; } 
         .dot.center { grid-area: g; }       
 
-        .flip-setup { 
-            background: rgba(0,0,0,0.4); padding: 8px 15px; border-radius: 15px; margin-bottom: 5px;
-            display: flex; flex-direction: column; align-items: center; gap: 5px; border: 1px solid rgba(255,255,255,0.1); flex-shrink: 0;
-        }
+        .flip-setup { background: rgba(0,0,0,0.4); padding: 8px 15px; border-radius: 15px; margin-bottom: 5px; margin-top: auto; display: flex; flex-direction: column; align-items: center; gap: 5px; border: 1px solid rgba(255,255,255,0.1); flex-shrink: 0; }
         .flip-controls { display: flex; align-items: center; gap: 20px; }
         .btn-inc { width: 35px; height: 35px; border-radius: 50%; border: 2px solid white; background: transparent; color: white; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .flip-val { font-size: 1.8rem; font-weight: bold; font-family: monospace; color: var(--gold); width: 30px; text-align: center; }
 
-        /* PLANILLA (ESTRUCTURA FLEX PARA SCROLL PERFECTO) */
-        #score-sheet { 
-            flex: 1; /* Ocupa todo el espacio disponible */
-            background: #fff; 
-            border-radius: 15px 15px 0 0; 
-            margin: 0 -10px; 
-            display: none; 
-            z-index: 40; 
-            box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
-            flex-direction: column;
-            overflow: hidden; 
-        }
+        /* PLANILLA (ESTADO PURO) */
+        #score-sheet { flex: 1; background: #fff; border-radius: 15px 15px 0 0; margin: 0 -10px; display: none; z-index: 40; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); flex-direction: column; overflow: hidden; }
         
-        #sheet-header { padding: 15px; text-align: center; border-bottom: 1px solid #eee; background: #fff; border-radius: 15px 15px 0 0; flex-shrink: 0; }
+        #sheet-header { padding: 15px; text-align: center; border-bottom: 1px solid #eee; background: #fff; flex-shrink: 0; }
         #sheet-header h3 { margin: 0; color: #333; }
 
-        #sheet-content { 
-            flex: 1; /* Ocupa el medio */
-            overflow-y: auto; /* SCROLL AQUÍ */
-            padding: 10px 15px;
-            -webkit-overflow-scrolling: touch; 
-        }
+        #sheet-content { flex: 1; overflow-y: auto; padding: 10px 15px; -webkit-overflow-scrolling: touch; }
 
-        #sheet-footer { 
-            padding: 15px; 
-            background: #fff; 
-            border-top: 1px solid #eee; 
-            display: flex; 
-            justify-content: center; 
-            flex-shrink: 0; /* Altura fija */
-        }
+        #sheet-footer { padding: 15px; background: #fff; border-top: 1px solid #eee; display: flex; justify-content: center; flex-shrink: 0; }
 
-        .score-row { display: flex; justify-content: space-between; padding: 12px 5px; border-bottom: 1px solid #eee; align-items: center; }
+        .score-row { display: flex; justify-content: space-between; padding: 8px 5px; border-bottom: 1px solid #eee; align-items: center; }
         .cat-name { font-weight: 700; color: #34495e; font-size: 1rem; }
         
-        .cat-btn { background: #ecf0f1; border: 2px solid #bdc3c7; padding: 8px 18px; border-radius: 12px; font-weight: 900; color: #7f8c8d; cursor: pointer; transition: 0.2s; font-size: 1rem; min-width: 50px; }
+        .cat-btn { background: #ecf0f1; border: 2px solid #bdc3c7; padding: 8px 15px; border-radius: 10px; font-weight: 900; color: #7f8c8d; cursor: pointer; transition: 0.2s; font-size: 1rem; min-width: 50px; }
         .cat-btn.selectable { background: white; color: #3498db; border-color: #3498db; }
         .cat-btn.selected-candidate { background: var(--gold); color: #2c3e50; border-color: #f39c12; transform: scale(1.1); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         .cat-btn.filled { background: transparent; border: none; color: #2c3e50; font-size: 1.3rem; cursor: default; }
         .cat-btn.disabled { opacity: 0.4; cursor: default; filter: grayscale(1); }
 
-        /* BOTÓN CONFIRMAR FLOTANTE (REUBICADO EN FOOTER) */
-        .btn-confirm { 
-            background: var(--gold); color: #2c3e50; border: none; padding: 12px 40px; border-radius: 30px; font-weight: 900; font-size: 1.1rem; box-shadow: 0 10px 20px rgba(0,0,0,0.2); cursor: pointer; opacity: 0.5; pointer-events: none; transition: 0.3s;
-        }
+        .btn-confirm { background: var(--gold); color: #2c3e50; border: none; padding: 12px 40px; border-radius: 30px; font-weight: 900; font-size: 1.1rem; box-shadow: 0 10px 20px rgba(0,0,0,0.2); cursor: pointer; opacity: 0.5; pointer-events: none; transition: 0.3s; }
         .btn-confirm.active { opacity: 1; pointer-events: auto; animation: pulse 1s infinite; }
 
-        /* CONTROLES PRINCIPALES */
-        .controls { display: flex; gap: 10px; justify-content: center; padding-bottom: 20px; margin-top: 10px; z-index: 50; position: relative; flex-shrink: 0; }
+        /* CONTROLES */
+        .controls { display: flex; gap: 10px; justify-content: center; padding: 10px 0; z-index: 50; flex-shrink: 0; min-height: 60px; }
         .btn-roll { background: #e74c3c; width: 100%; max-width: 300px; box-shadow: 0 5px 0 #c0392b; }
         .btn-score { background: #3498db; width: 100%; max-width: 300px; box-shadow: 0 5px 0 #2980b9; }
 
-        #msg-area { text-align:center; color:rgba(255,255,255,0.8); font-size:1rem; min-height:25px; margin-bottom:10px; font-weight: bold; display: block; flex-shrink: 0; }
-        .msg-alert { color: var(--gold) !important; text-shadow: 0 2px 4px rgba(0,0,0,0.5); font-size: 1.2rem !important; animation: pulse 0.5s infinite; }
+        #msg-area { text-align:center; color:rgba(255,255,255,0.8); font-size:0.9rem; min-height:20px; margin-bottom:5px; font-weight: bold; display: block; flex-shrink: 0; }
+        .msg-alert { color: var(--gold) !important; text-shadow: 0 2px 4px rgba(0,0,0,0.5); font-size: 1.1rem !important; animation: pulse 0.5s infinite; }
 
         /* MODALES */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(5px); }
@@ -176,7 +150,6 @@
     <div id="modal-options" class="modal-overlay" onclick="toggleOptions()">
         <div class="modal-card" onclick="event.stopPropagation()">
             <h2 class="modal-title">CONFIGURACIÓN</h2>
-            
             <div class="opt-row">
                 <span>🔊 Sonido</span>
                 <div class="toggle-switch active" id="sw-sound" onclick="toggleSetting('sound')"></div>
@@ -185,8 +158,6 @@
                 <span>🔄 Modo Obligado</span>
                 <div class="toggle-switch active" id="sw-obliged" onclick="toggleSetting('obliged')"></div>
             </div>
-            <p style="font-size:0.8rem; color:#888; text-align:center; margin-top:5px;">Activa el panel para declarar dados a dar vuelta.</p>
-
             <button class="btn" style="width:100%; font-size:1rem; padding:10px; margin-top:20px;" onclick="toggleOptions()">LISTO</button>
         </div>
     </div>
@@ -196,14 +167,12 @@
             <div class="icon-btn" onclick="toggleOptions()">⚙️</div>
             <div class="icon-btn" onclick="toggleHelp()">?</div>
         </div>
-
         <div class="logo-box">
             <div class="logo-die d1">🎲</div>
             <div class="logo-die d2">🎲</div>
         </div>
         <h1>GENERALA</h1>
         <div class="subtitle">FRANMA CASINO</div>
-        
         <p style="color:#aaa; margin-bottom:10px; font-size: 0.8rem; font-weight: bold;">CANTIDAD DE JUGADORES</p>
         <div class="player-count-box">
             <button class="p-btn selected" onclick="setPlayers(1, this)">1</button>
@@ -211,14 +180,12 @@
             <button class="p-btn" onclick="setPlayers(3, this)">3</button>
             <button class="p-btn" onclick="setPlayers(4, this)">4</button>
         </div>
-        
         <div id="names-container">
             <div class="name-row">
                 <span class="name-label">J1</span>
                 <input type="text" class="name-input" id="name-0" value="JUGADOR 1" maxlength="10">
             </div>
         </div>
-
         <button class="btn" onclick="startGame()">JUGAR</button>
     </div>
 
@@ -235,7 +202,7 @@
                 </div>
             </div>
 
-            <div id="dice-zone" style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+            <div id="dice-zone">
                 <div class="dice-container" id="dice-rack"></div>
                 
                 <div class="flip-setup" id="flip-area">
@@ -250,7 +217,7 @@
                 <div id="msg-area">...</div>
             </div>
 
-            <div id="score-sheet" style="display:none;">
+            <div id="score-sheet">
                 <div id="sheet-header">
                     <h3 id="sheet-title" style="margin:0; color:#333;">JUGADOR 1</h3>
                 </div>
@@ -304,7 +271,8 @@
             phase: 'select', 
             isRolling: false,
             tempSelection: null, 
-            viewMode: false
+            viewMode: false,
+            isSheetOpen: false // NUEVO: Variable de estado segura
         };
 
         let settings = {
@@ -319,20 +287,22 @@
             init: function(){ if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
             playTone: function(freq, type) {
                 if(!settings.sound || !this.ctx) return;
-                if(this.ctx.state === 'suspended') this.ctx.resume();
-                const o = this.ctx.createOscillator();
-                const g = this.ctx.createGain();
-                o.type = type; o.frequency.value = freq;
-                o.connect(g); g.connect(this.ctx.destination);
-                o.start(); g.gain.exponentialRampToValueAtTime(0.00001, this.ctx.currentTime + 0.3);
+                try {
+                    if(this.ctx.state === 'suspended') this.ctx.resume();
+                    const o = this.ctx.createOscillator();
+                    const g = this.ctx.createGain();
+                    o.type = type; o.frequency.value = freq;
+                    o.connect(g); g.connect(this.ctx.destination);
+                    o.start(); g.gain.exponentialRampToValueAtTime(0.00001, this.ctx.currentTime + 0.3);
+                } catch(e) { console.log(e); }
             }
         };
 
+        // --- UI ---
         function setPlayers(n, btn) {
             playerCount = n;
             document.querySelectorAll('.p-btn').forEach(b => b.classList.remove('selected'));
             btn.classList.add('selected');
-            
             const container = document.getElementById('names-container');
             container.innerHTML = '';
             for(let i=0; i<n; i++) {
@@ -376,8 +346,7 @@
         }
 
         function resetTurn() {
-            // FIX: CERRAR PLANILLA EXPLICITAMENTE
-            document.getElementById('score-sheet').style.display = 'none';
+            state.isSheetOpen = false; // ESTADO SEGURO
             
             state.dice = [1, 1, 1, 1, 1];
             state.held = [false, false, false, false, false];
@@ -483,8 +452,9 @@
 
             rollsInfo.innerText = `TIROS: ${state.rollsLeft}`;
 
-            // PLANILLA ACTIVA
-            if (scoreSheet.style.display === 'flex') {
+            // USO DE VARIABLE SEGURA
+            if (state.isSheetOpen) {
+                scoreSheet.style.display = 'flex'; // FLEX PARA ESTRUCTURA
                 diceZone.style.display = 'none';
                 btnRoll.style.display = 'none';
                 
@@ -502,6 +472,7 @@
                 }
                 return;
             } else {
+                scoreSheet.style.display = 'none';
                 diceZone.style.display = 'flex';
                 confirmBtn.classList.remove('active');
             }
@@ -544,17 +515,27 @@
         }
 
         function toggleScoreSheet(forceOpen = false, isViewMode = false) {
-            const sheet = document.getElementById('score-sheet');
-            
-            if ((sheet.style.display === 'flex' && !forceOpen) || (sheet.style.display === 'flex' && isViewMode && state.viewMode)) {
-                sheet.style.display = 'none';
+            // SI ESTÁ ABIERTA Y NO FORZAMOS -> CERRAR
+            if (state.isSheetOpen && !forceOpen) {
+                state.isSheetOpen = false;
                 state.viewMode = false;
                 state.tempSelection = null; 
-            } else {
+            } 
+            // SI ESTÁ ABIERTA EN VIEW Y TOCAMOS VIEW OTRA VEZ -> CERRAR
+            else if (state.isSheetOpen && isViewMode && state.viewMode) {
+                state.isSheetOpen = false;
+                state.viewMode = false;
+                state.tempSelection = null;
+            }
+            // ABRIR
+            else {
+                state.isSheetOpen = true;
                 state.viewMode = isViewMode;
                 state.tempSelection = null; 
                 calculatePotentialScores();
-                sheet.style.display = 'flex'; 
+                
+                // RESET SCROLL
+                document.getElementById('sheet-content').scrollTop = 0;
             }
             updateUI();
         }
@@ -562,7 +543,6 @@
         function renderDice(interactive) {
             const rack = document.getElementById('dice-rack');
             rack.innerHTML = '';
-            
             state.dice.forEach((val, i) => {
                 const die = document.createElement('div');
                 const isFlippedNow = (state.phase === 'forcing_flip' && state.flippedIndices.includes(i));
@@ -668,8 +648,7 @@
             const { id, score } = state.tempSelection;
             SFX.playTone(800, 'triangle');
             state.scores[state.currentPlayer][id] = score;
-            state.tempSelection = null; 
-
+            
             const totalSlots = CATEGORIES.length * state.players.length;
             let currentTotalFilled = 0;
             state.scores.forEach(s => currentTotalFilled += Object.keys(s).length);
