@@ -91,9 +91,8 @@
             display: none; 
             z-index: 40; 
             box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
-            /* Estructura Interna */
             flex-direction: column;
-            overflow: hidden; /* El contenedor no scrollea, scrollea el contenido */
+            overflow: hidden; 
         }
         
         #sheet-header { padding: 15px; text-align: center; border-bottom: 1px solid #eee; background: #fff; border-radius: 15px 15px 0 0; flex-shrink: 0; }
@@ -115,15 +114,16 @@
             flex-shrink: 0; /* Altura fija */
         }
 
-        .score-row { display: flex; justify-content: space-between; padding: 10px 5px; border-bottom: 1px solid #eee; align-items: center; }
+        .score-row { display: flex; justify-content: space-between; padding: 12px 5px; border-bottom: 1px solid #eee; align-items: center; }
         .cat-name { font-weight: 700; color: #34495e; font-size: 1rem; }
         
-        .cat-btn { background: #ecf0f1; border: 2px solid #bdc3c7; padding: 8px 15px; border-radius: 10px; font-weight: 900; color: #7f8c8d; cursor: pointer; transition: 0.2s; font-size: 1rem; min-width: 50px; }
+        .cat-btn { background: #ecf0f1; border: 2px solid #bdc3c7; padding: 8px 18px; border-radius: 12px; font-weight: 900; color: #7f8c8d; cursor: pointer; transition: 0.2s; font-size: 1rem; min-width: 50px; }
         .cat-btn.selectable { background: white; color: #3498db; border-color: #3498db; }
         .cat-btn.selected-candidate { background: var(--gold); color: #2c3e50; border-color: #f39c12; transform: scale(1.1); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        .cat-btn.filled { background: transparent; border: none; color: #2c3e50; font-size: 1.2rem; cursor: default; }
+        .cat-btn.filled { background: transparent; border: none; color: #2c3e50; font-size: 1.3rem; cursor: default; }
         .cat-btn.disabled { opacity: 0.4; cursor: default; filter: grayscale(1); }
 
+        /* BOTÓN CONFIRMAR FLOTANTE (REUBICADO EN FOOTER) */
         .btn-confirm { 
             background: var(--gold); color: #2c3e50; border: none; padding: 12px 40px; border-radius: 30px; font-weight: 900; font-size: 1.1rem; box-shadow: 0 10px 20px rgba(0,0,0,0.2); cursor: pointer; opacity: 0.5; pointer-events: none; transition: 0.3s;
         }
@@ -176,6 +176,7 @@
     <div id="modal-options" class="modal-overlay" onclick="toggleOptions()">
         <div class="modal-card" onclick="event.stopPropagation()">
             <h2 class="modal-title">CONFIGURACIÓN</h2>
+            
             <div class="opt-row">
                 <span>🔊 Sonido</span>
                 <div class="toggle-switch active" id="sw-sound" onclick="toggleSetting('sound')"></div>
@@ -184,6 +185,8 @@
                 <span>🔄 Modo Obligado</span>
                 <div class="toggle-switch active" id="sw-obliged" onclick="toggleSetting('obliged')"></div>
             </div>
+            <p style="font-size:0.8rem; color:#888; text-align:center; margin-top:5px;">Activa el panel para declarar dados a dar vuelta.</p>
+
             <button class="btn" style="width:100%; font-size:1rem; padding:10px; margin-top:20px;" onclick="toggleOptions()">LISTO</button>
         </div>
     </div>
@@ -193,12 +196,14 @@
             <div class="icon-btn" onclick="toggleOptions()">⚙️</div>
             <div class="icon-btn" onclick="toggleHelp()">?</div>
         </div>
+
         <div class="logo-box">
             <div class="logo-die d1">🎲</div>
             <div class="logo-die d2">🎲</div>
         </div>
         <h1>GENERALA</h1>
         <div class="subtitle">FRANMA CASINO</div>
+        
         <p style="color:#aaa; margin-bottom:10px; font-size: 0.8rem; font-weight: bold;">CANTIDAD DE JUGADORES</p>
         <div class="player-count-box">
             <button class="p-btn selected" onclick="setPlayers(1, this)">1</button>
@@ -206,12 +211,14 @@
             <button class="p-btn" onclick="setPlayers(3, this)">3</button>
             <button class="p-btn" onclick="setPlayers(4, this)">4</button>
         </div>
+        
         <div id="names-container">
             <div class="name-row">
                 <span class="name-label">J1</span>
                 <input type="text" class="name-input" id="name-0" value="JUGADOR 1" maxlength="10">
             </div>
         </div>
+
         <button class="btn" onclick="startGame()">JUGAR</button>
     </div>
 
@@ -369,6 +376,9 @@
         }
 
         function resetTurn() {
+            // FIX: CERRAR PLANILLA EXPLICITAMENTE
+            document.getElementById('score-sheet').style.display = 'none';
+            
             state.dice = [1, 1, 1, 1, 1];
             state.held = [false, false, false, false, false];
             state.rollsLeft = 3;
