@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#e67e22">
+    
+    <title>Dibujaloo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- ESTILOS GENERALES --- */
+        :root {
+            --bg: #2c3e50;
+            --main: #e67e22; 
+            --accent: #f1c40f; 
+            --tool-bg: #34495e;
+            --text-light: #ecf0f1;
+        }
+
+        * { box-sizing: border-box; touch-action: manipulation; }
+
+        body { 
+            margin: 0; height: 100vh; overflow: hidden; 
+            background: radial-gradient(circle at center, #34495e 0%, #2c3e50 100%); 
+            font-family: 'Roboto', sans-serif; display: flex; flex-direction: column; user-select: none; 
+        }
+
+        /* PANTALLAS */
+        .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; position: absolute; top:0; left:0; z-index: 10; }
+        .active { display: flex; animation: fadeIn 0.4s cubic-bezier(0.25, 1, 0.5, 1); }
+        @keyframes fadeIn { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0); } }
+
+        /* --- HOME --- */
+        .home-logo-container { text-align: center; margin-bottom: 20px; animation: float 3s ease-in-out infinite; }
+        .emoji-logo { font-size: 5rem; text-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+        h1 { font-family: 'Fredoka One'; font-size: 3.5rem; color: var(--main); text-shadow: 4px 4px 0 #1a252f; margin: 0; letter-spacing: 2px; -webkit-text-stroke: 2px #1a252f; }
+        .subtitle { color: #bdc3c7; font-weight: bold; letter-spacing: 3px; font-size: 0.9rem; margin-top: 5px; text-transform: uppercase; }
+
+        /* HEADER ICONOS */
+        .top-bar { position: absolute; top: 20px; right: 20px; display: flex; gap: 15px; z-index: 50; }
+        .icon-btn { 
+            background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.2); 
+            color: white; width: 45px; height: 45px; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 1.2rem; cursor: pointer; transition: 0.2s;
+        }
+        .icon-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.3); }
+        .icon-btn.muted { color: #e74c3c; border-color: #e74c3c; position: relative; }
+        .icon-btn.muted::after { content: ''; position: absolute; width: 100%; height: 2px; background: #e74c3c; transform: rotate(45deg); }
+
+        /* CONFIGURACIÓN (TIME & CAT) */
+        .config-label { color: #bdc3c7; font-size: 0.8rem; font-weight: bold; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .selector-box { 
+            background: rgba(0,0,0,0.3); padding: 5px; border-radius: 50px; 
+            display: flex; gap: 5px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1);
+            max-width: 95%; flex-wrap: wrap; justify-content: center;
+        }
+        .pill-btn { 
+            padding: 10px 20px; border-radius: 40px; border: none; background: transparent; 
+            color: #aaa; font-weight: bold; cursor: pointer; transition: 0.2s; font-family: 'Fredoka One'; font-size: 0.9rem;
+        }
+        .pill-btn.selected { background: var(--main); color: white; box-shadow: 0 4px 10px rgba(230, 126, 34, 0.4); }
+
+        .btn-play { 
+            background: linear-gradient(135deg, #f1c40f, #f39c12); color: #2c3e50; border: none; 
+            padding: 18px 60px; border-radius: 50px; font-size: 1.8rem; font-family: 'Fredoka One'; 
+            box-shadow: 0 10px 0 #d35400, 0 20px 20px rgba(0,0,0,0.4); 
+            cursor: pointer; transition: transform 0.1s; text-transform: uppercase;
+        }
+        .btn-play:active { transform: translateY(6px); box-shadow: 0 4px 0 #d35400; }
+
+        /* --- JUEGO UI --- */
+        #game-header { 
+            width: 100%; padding: 10px 20px; background: #1a252f; color: white; 
+            display: flex; justify-content: space-between; align-items: center; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3); z-index: 20; height: 70px;
+        }
+        .timer { font-family: 'Fredoka One'; font-size: 2rem; color: var(--accent); min-width: 50px; text-align: center; }
+        .word-display { font-weight: bold; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1px; color: white; }
+
+        /* CANVAS AREA */
+        #game-content { flex: 1; width: 100%; position: relative; display: flex; flex-direction: column; }
+        
+        #canvas-container { 
+            flex: 1; width: 100%; background: #bdc3c7; 
+            display: none; align-items: center; justify-content: center; position: relative;
+        }
+        canvas { background: white; box-shadow: 0 0 30px rgba(0,0,0,0.2); cursor: crosshair; }
+
+        /* MODO PAPEL */
+        #paper-container {
+            flex: 1; width: 100%; display: none; flex-direction: column;
+            align-items: center; justify-content: center; background: radial-gradient(circle, #34495e, #2c3e50);
+            padding: 20px; text-align: center;
+        }
+        .big-word-paper { font-family: 'Fredoka One'; font-size: 3.5rem; color: var(--accent); text-transform: uppercase; line-height: 1.1; margin-bottom: 40px; text-shadow: 0 5px 0 rgba(0,0,0,0.2); }
+        .paper-controls { display: flex; gap: 30px; width: 100%; justify-content: center; }
+        .btn-paper { 
+            width: 90px; height: 90px; border-radius: 50%; font-size: 2.5rem; border: 4px solid rgba(255,255,255,0.2);
+            display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.1s;
+        }
+        .btn-paper:active { transform: scale(0.9); }
+
+        /* TOOLBAR (DIGITAL) */
+        #toolbar { 
+            width: 100%; background: var(--tool-bg); padding: 15px; 
+            display: none; gap: 15px; justify-content: center; align-items: center;
+            padding-bottom: 25px; border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        .color-btn { 
+            width: 35px; height: 35px; border-radius: 50%; border: 3px solid transparent; 
+            cursor: pointer; transition: 0.2s; box-shadow: 0 4px 5px rgba(0,0,0,0.3);
+        }
+        .color-btn.active { transform: scale(1.2); border-color: white; }
+        .tool-btn { 
+            background: #ecf0f1; border: none; border-radius: 10px; padding: 10px; 
+            font-size: 1.4rem; cursor: pointer; min-width: 50px; box-shadow: 0 4px 0 #bdc3c7;
+        }
+        .tool-btn:active { transform: translateY(4px); box-shadow: none; }
+
+        /* MODALES */
+        .modal-overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); z-index: 100;
+            display: none; align-items: center; justify-content: center; padding: 20px;
+        }
+        .modal-card { 
+            background: white; width: 100%; max-width: 350px; padding: 30px; 
+            border-radius: 25px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.6); 
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .secret-word { font-family: 'Fredoka One'; font-size: 2.5rem; color: #2c3e50; margin: 20px 0; text-transform: uppercase; }
+        .score-row { display: flex; justify-content: space-between; margin-bottom: 15px; font-weight: 900; font-size: 1.4rem; color: #34495e; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        
+        /* FEEDBACK */
+        .feedback { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: 'Fredoka One'; font-size: 5rem; color: var(--accent); text-shadow: 0 5px 20px rgba(0,0,0,0.5); pointer-events: none; opacity: 0; transition: 0.5s; z-index: 50; }
+        .feedback.pop { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+
+        /* MODO SELECCION */
+        .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; margin-top: 20px; }
+        .mode-card { 
+            background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 25px 10px;
+            display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: 0.2s;
+        }
+        .mode-card:hover { background: rgba(255,255,255,0.15); border-color: var(--accent); transform: translateY(-5px); }
+        .mode-icon { font-size: 3.5rem; margin-bottom: 15px; }
+
+        /* INSTRUCCIONES */
+        .help-list { text-align: left; color: #555; font-size: 0.95rem; line-height: 1.6; margin-bottom: 20px; }
+        .help-list li { margin-bottom: 10px; }
+
+        /* TOAST CAST */
+        #toast-cast {
+            position: fixed; top: -100px; left: 0; width: 100%; 
+            background: #3498db; color: white; padding: 15px; text-align: center;
+            font-weight: bold; z-index: 100; transition: top 0.5s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+        #toast-cast.show { top: 0; }
+
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-15px); } 100% { transform: translateY(0px); } }
+        @keyframes popIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+
+    </style>
+</head>
+<body>
+
+    <div id="toast-cast">
+        📺 Tip: ¡Transmite tu pantalla al TV!
+        <button onclick="hideCast()" style="background:rgba(0,0,0,0.2); color:white; border:none; border-radius:50%; width:30px; height:30px; font-weight:bold; cursor:pointer;">✕</button>
+    </div>
+
+    <div class="top-bar">
+        <div class="icon-btn" onclick="toggleSound()" id="btn-sound">🔊</div>
+        <div class="icon-btn" onclick="toggleHelp()">?</div>
+    </div>
+
+    <div id="screen-home" class="screen active">
+        <div class="home-logo-container">
+            <div class="emoji-logo">🎨</div>
+            <h1>DIBUJALOO</h1>
+            <div class="subtitle">PICTIONARY DIGITAL</div>
+        </div>
+        
+        <div class="config-label">TIEMPO</div>
+        <div class="selector-box">
+            <button class="pill-btn selected" onclick="setTime(60, this)">60s</button>
+            <button class="pill-btn" onclick="setTime(90, this)">90s</button>
+            <button class="pill-btn" onclick="setTime(120, this)">120s</button>
+        </div>
+
+        <div class="config-label">CATEGORÍA</div>
+        <div class="selector-box">
+            <button class="pill-btn selected" onclick="setCategory('mix', this)">MIX</button>
+            <button class="pill-btn" onclick="setCategory('easy', this)">FÁCIL</button>
+            <button class="pill-btn" onclick="setCategory('hard', this)">DIFÍCIL</button>
+            <button class="pill-btn" onclick="setCategory('actions', this)">ACCIONES</button>
+        </div>
+
+        <button class="btn-play" onclick="goToModeSelect()">JUGAR</button>
+    </div>
+
+    <div id="screen-mode" class="screen">
+        <h2 style="color:white; font-family:'Fredoka One'; margin-bottom:10px;">ELIGE UN MODO</h2>
+        <div class="mode-grid" style="max-width: 400px;">
+            <div class="mode-card" onclick="setMode('paper')">
+                <div class="mode-icon">📝</div>
+                <div style="font-weight:bold; color:white;">PAPEL</div>
+                <div style="font-size:0.7rem; color:#aaa; margin-top:5px;">Dibuja en hoja real</div>
+            </div>
+            <div class="mode-card" onclick="setMode('digital')">
+                <div class="mode-icon">📱</div>
+                <div style="font-weight:bold; color:white;">DIGITAL</div>
+                <div style="font-size:0.7rem; color:#aaa; margin-top:5px;">Dibuja en pantalla</div>
+            </div>
+        </div>
+        <button onclick="location.reload()" style="background:none; border:none; color:#aaa; margin-top:40px; text-decoration:underline; font-size:1rem; cursor:pointer;">Volver al inicio</button>
+    </div>
+
+    <div id="screen-word" class="screen">
+        <div class="modal-card">
+            <h3 style="color:#7f8c8d; margin:0; font-size:0.9rem; letter-spacing:1px;">TU PALABRA ES:</h3>
+            <div class="secret-word" id="secret-target">...</div>
+            <p style="color:#e74c3c; font-weight:bold; font-size:0.9rem;">¡SHHH! No la digas.</p>
+            <button class="btn-play" style="font-size:1.2rem; padding:15px 40px;" onclick="startRound()">¡A DIBUJAR!</button>
+        </div>
+    </div>
+
+    <div id="screen-game" class="screen" style="justify-content: flex-start;">
+        <div id="game-header">
+            <div class="timer" id="timer">60</div>
+            <div class="word-display" id="header-word">???</div>
+            <button class="tool-btn" id="btn-giveup" onclick="endRound(false)" style="background:#e74c3c; color:white; font-weight:bold; box-shadow:0 4px 0 #c0392b;">X</button>
+        </div>
+
+        <div id="game-content">
+            <div id="canvas-container">
+                <canvas id="draw-area"></canvas>
+            </div>
+            <div id="paper-container">
+                <div style="color:#7f8c8d; font-weight:bold; letter-spacing:2px; margin-bottom:20px;">ESTÁS DIBUJANDO:</div>
+                <div class="big-word-paper" id="paper-word">PALABRA</div>
+                <div class="paper-controls">
+                    <div class="btn-paper" style="background:#e74c3c; color:white; box-shadow:0 6px 0 #c0392b;" onclick="endRound(false)">✕</div>
+                    <div class="btn-paper" style="background:#27ae60; color:white; box-shadow:0 6px 0 #219150;" onclick="endRound(true)">✓</div>
+                </div>
+            </div>
+            <div id="feedback-txt" class="feedback">¡BIEN!</div>
+        </div>
+
+        <div id="toolbar">
+            <div class="color-btn active" style="background:#2c3e50;" onclick="setColor('#2c3e50', this)"></div>
+            <div class="color-btn" style="background:#c0392b;" onclick="setColor('#c0392b', this)"></div>
+            <div class="color-btn" style="background:#2980b9;" onclick="setColor('#2980b9', this)"></div>
+            <div class="color-btn" style="background:#27ae60;" onclick="setColor('#27ae60', this)"></div>
+            <div class="color-btn" style="background:#f1c40f;" onclick="setColor('#f1c40f', this)"></div>
+            <div style="width:1px; height:30px; background:rgba(255,255,255,0.2); margin:0 5px;"></div>
+            <button class="tool-btn" onclick="setEraser()">🧽</button>
+            <button class="tool-btn" onclick="clearCanvas()">🗑️</button>
+            <button class="tool-btn" style="background:var(--accent); color:#2c3e50; font-weight:bold; box-shadow:0 4px 0 #d35400;" onclick="endRound(true)">✓</button>
+        </div>
+    </div>
+
+    <div id="screen-score" class="screen">
+        <div class="modal-card">
+            <h2 style="margin-top:0; color:#e67e22;">RESULTADOS</h2>
+            <div class="score-row">
+                <span>EQUIPO 1</span>
+                <span id="score-1" style="color:#e67e22;">0</span>
+            </div>
+            <div class="score-row">
+                <span>EQUIPO 2</span>
+                <span id="score-2" style="color:#2980b9;">0</span>
+            </div>
+            <p style="color:#95a5a6; font-size:0.9rem; margin:20px 0;">Entreguen el celular al siguiente artista</p>
+            <button class="btn-play" style="font-size:1.2rem; padding:15px 40px;" onclick="nextTurn()">SIGUIENTE</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-help" onclick="toggleHelp()">
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <h2 style="margin-top:0; color:#e67e22;">CÓMO JUGAR</h2>
+            <ul class="help-list">
+                <li><b>1. Equipos:</b> Divídanse en 2 equipos.</li>
+                <li><b>2. El Artista:</b> En cada turno, un jugador ve la palabra secreta.</li>
+                <li><b>3. Dibujar:</b> Tiene 60s para dibujarla (en pantalla o papel). ¡Sin hablar!</li>
+                <li><b>4. Categorías:</b> Elige "Fácil" para niños o "Difícil" para expertos.</li>
+            </ul>
+            <button class="tool-btn" style="width:100%; background:var(--main); color:white; font-weight:bold; box-shadow:0 4px 0 #d35400;" onclick="toggleHelp()">ENTENDIDO</button>
+        </div>
+    </div>
+
+    <script>
+        // --- BASE DE DATOS CATEGORIZADA ---
+        const DB_WORDS = {
+            easy: ["Casa","Sol","Flor","Perro","Gato","Auto","Pelota","Manzana","Pizza","Helado","Pez","Luna","Ojo","Mano","Boca","Pie","Cama","Silla","Mesa","Arbol","Nube","Vaso","Taza","Llave","Lapiz","Libro","Huevo","Vela","Globo","Pato","Leon","Oso","Barco","Avion","Tren","Moto","Bici","Raton","Queso","Pan","Uva","Rey","Bebe","Oveja","Cerdo","Vaca","Gusano","Anillo","Reloj","Lentes","Nariz","Oreja","Dedo","Pelo","Caja","Bolsa","Regalo","Carta","Sobre","Dado","Hueso","Copa","Escoba","Balde","Jabon","Peine","Espejo","Grifo","Ducha","Inodoro","Puerta","Ventana","Techo","Pared","Suelo","Fuego","Agua","Hielo","Nieve","Playa","Mar","Rio","Lago","Isla","Roca","Piedra","Arena","Pasto","Hoja","Rama","Flor","Rosa","Arcoiris","Estrella","Cielo","Sol","Luna"],
+            
+            actions: ["Correr","Saltar","Comer","Dormir","Llorar","Reir","Bailar","Cantar","Leer","Escribir","Pintar","Dibujar","Cocinar","Barrer","Lavar","Nadar","Volar","Manejar","Pescar","Jugar","Pelear","Abrazar","Besar","Saludar","Caminar","Subir","Bajar","Caer","Romper","Cortar","Pegar","Abrir","Cerrar","Empujar","Tirar","Mirar","Escuchar","Oler","Tocar","Pensar","Soñar","Gritar","Susurrar","Hablar","Callar","Beber","Fumar","Tos","Estornudar","Bostezar","Aplaudir","Saludar","Despedir","Esperar","Buscar","Encontrar","Perder","Ganar","Perder","Comprar","Vender","Pagar","Regalar","Robar","Matar","Morir","Nacer","Crecer","Vivir","Trabajar","Estudiar","Aprender","Enseñar","Construir","Destruir","Arreglar","Limpiar","Ensuciar","Vestir","Desvestir","Peinar","Afeitar","Maquillar"],
+            
+            hard: ["Libertad","Justicia","Amor","Paz","Guerra","Miedo","Sueño","Idea","Tiempo","Alma","Fantasma","Alien","Robot","Vampiro","Zombie","Momia","Bruja","Mago","Hada","Duende","Dragon","Unicornio","Sirena","Monstruo","Esqueleto","Pirata","Ninja","Samurai","Vikingo","Indio","Vaquero","Payaso","Mimo","Astronauta","Buzo","Bombero","Policia","Medico","Juez","Rey","Reina","Princesa","Principe","Presidente","Dios","Diablo","Angel","Demonio","Cielo","Infierno","Paraiso","Mundo","Universo","Galaxia","Planeta","Estrella","Cometa","Meteorito","Agujero Negro","Gravedad","Electricidad","Magnetismo","Energia","Atomo","Molecula","Celula","Virus","Bacteria","ADN","Evolucion","Historia","Geografia","Matematica","Fisica","Quimica","Biologia","Arte","Musica","Literatura","Cine","Teatro","Poesia","Novela","Cuento","Leyenda","Mito","Religion","Filosofia","Politica","Economia","Sociedad","Cultura","Tradicion","Costumbre","Moda","Deporte","Juego","Juguete","Herramienta","Maquina","Vehiculo","Edificio","Monumento","Pais","Ciudad"]
+        };
+
+        // --- SONIDOS ---
+        const SFX = {
+            ctx: null,
+            muted: false,
+            init: function() { if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
+            play: function(type) {
+                if(this.muted || !this.ctx) return;
+                if(this.ctx.state === 'suspended') this.ctx.resume();
+                
+                const t = this.ctx.currentTime;
+                const o = this.ctx.createOscillator();
+                const g = this.ctx.createGain();
+                o.connect(g); g.connect(this.ctx.destination);
+
+                if(type === 'click') {
+                    o.frequency.setValueAtTime(400, t);
+                    g.gain.setValueAtTime(0.1, t);
+                    o.start(t); o.stop(t + 0.05);
+                } else if(type === 'win') {
+                    o.type = 'triangle';
+                    o.frequency.setValueAtTime(500, t);
+                    o.frequency.linearRampToValueAtTime(1000, t + 0.1);
+                    g.gain.setValueAtTime(0.1, t);
+                    g.gain.linearRampToValueAtTime(0, t + 0.3);
+                    o.start(t); o.stop(t + 0.3);
+                } else if(type === 'fail') {
+                    o.type = 'sawtooth';
+                    o.frequency.setValueAtTime(300, t);
+                    o.frequency.linearRampToValueAtTime(100, t + 0.3);
+                    g.gain.setValueAtTime(0.1, t);
+                    g.gain.linearRampToValueAtTime(0, t + 0.3);
+                    o.start(t); o.stop(t + 0.3);
+                } else if(type === 'start') {
+                    o.frequency.setValueAtTime(600, t);
+                    g.gain.setValueAtTime(0.1, t);
+                    g.gain.linearRampToValueAtTime(0, t+0.5);
+                    o.start(t); o.stop(t+0.5);
+                }
+            }
+        };
+
+        // --- ESTADO Y LÓGICA DE CATEGORÍAS ---
+        let state = {
+            time: 60,
+            scores: [0, 0],
+            turn: 0,
+            word: "",
+            timerInterval: null,
+            mode: 'digital',
+            category: 'mix', // mix, easy, hard, actions
+            currentList: []
+        };
+        
+        let wakeLock = null;
+
+        // --- WAKE LOCK (Anti-Apagado) ---
+        async function requestWakeLock() {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                }
+            } catch (err) {
+                console.log(err);
+            }
+        }
+
+        // --- UI FUNCIONES ---
+        function toggleSound() {
+            SFX.init();
+            SFX.muted = !SFX.muted;
+            const btn = document.getElementById('btn-sound');
+            if(SFX.muted) {
+                btn.classList.add('muted');
+                btn.innerText = '🔇';
+            } else {
+                btn.classList.remove('muted');
+                btn.innerText = '🔊';
+                SFX.play('click');
+            }
+        }
+
+        function toggleHelp() {
+            const m = document.getElementById('modal-help');
+            m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
+            SFX.play('click');
+        }
+
+        // --- CANVAS LOGIC ---
+        const canvas = document.getElementById('draw-area');
+        const ctx = canvas.getContext('2d');
+        let drawing = false;
+        let color = "#2c3e50";
+        let lineWidth = 4;
+
+        function resizeCanvas() {
+            const container = document.getElementById('canvas-container');
+            if(container.clientWidth > 0) {
+                canvas.width = container.clientWidth;
+                canvas.height = container.clientHeight;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.strokeStyle = color;
+                ctx.lineWidth = lineWidth;
+            }
+        }
+
+        function getPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return { x: clientX - rect.left, y: clientY - rect.top };
+        }
+
+        ['mousedown', 'touchstart'].forEach(ev => canvas.addEventListener(ev, (e) => {
+            if(ev === 'touchstart') e.preventDefault();
+            drawing = true;
+            const pos = getPos(e);
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
+        }));
+
+        ['mousemove', 'touchmove'].forEach(ev => canvas.addEventListener(ev, (e) => {
+            if(ev === 'touchmove') e.preventDefault();
+            if (!drawing) return;
+            const pos = getPos(e);
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+        }));
+
+        ['mouseup', 'touchend', 'mouseleave'].forEach(ev => canvas.addEventListener(ev, () => {
+            drawing = false;
+            ctx.closePath();
+        }));
+
+        window.setColor = (c, btn) => {
+            SFX.play('click');
+            color = c;
+            lineWidth = 4;
+            ctx.strokeStyle = color;
+            ctx.lineWidth = lineWidth;
+            ctx.globalCompositeOperation = 'source-over';
+            document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+            if(btn) btn.classList.add('active');
+        };
+
+        window.setEraser = () => {
+            SFX.play('click');
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.lineWidth = 25;
+            document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+        };
+
+        window.clearCanvas = () => {
+            SFX.play('click');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        };
+
+        // --- GAME LOGIC ---
+        window.setTime = (t, btn) => {
+            SFX.play('click');
+            state.time = t;
+            // Busca dentro del contenedor padre para no afectar a los de categoría
+            btn.parentNode.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+        };
+
+        window.setCategory = (cat, btn) => {
+            SFX.play('click');
+            state.category = cat;
+            // Busca dentro del contenedor padre
+            btn.parentNode.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            
+            // Construir lista de palabras
+            if (cat === 'mix') {
+                state.currentList = [...DB_WORDS.easy, ...DB_WORDS.actions, ...DB_WORDS.hard];
+            } else {
+                state.currentList = DB_WORDS[cat];
+            }
+        };
+
+        window.goToModeSelect = () => {
+            SFX.init();
+            SFX.play('click');
+            
+            // Si no se eligió categoría (o quedó default), cargar lista
+            if (state.currentList.length === 0) {
+                state.currentList = [...DB_WORDS.easy, ...DB_WORDS.actions, ...DB_WORDS.hard];
+            }
+
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('screen-mode').classList.add('active');
+        };
+
+        window.setMode = (mode) => {
+            SFX.play('click');
+            state.mode = mode;
+            state.scores = [0, 0];
+            state.turn = 0;
+            if(mode === 'digital') showCastModal();
+            else hideCast();
+            nextTurn();
+        };
+
+        window.nextTurn = () => {
+            SFX.play('click');
+            
+            // Elegir palabra de la lista actual
+            if(state.currentList.length === 0) setCategory('mix', document.querySelector('.pill-btn')); // Fallback
+            state.word = state.currentList[Math.floor(Math.random() * state.currentList.length)];
+            
+            document.getElementById('secret-target').innerText = state.word;
+            document.getElementById('screen-score').classList.remove('active');
+            document.getElementById('screen-mode').classList.remove('active');
+            document.getElementById('screen-word').classList.add('active');
+        };
+
+        window.startRound = () => {
+            SFX.play('start');
+            requestWakeLock(); // ACTIVAR WAKE LOCK
+            
+            document.getElementById('screen-word').classList.remove('active');
+            document.getElementById('screen-game').classList.add('active');
+            
+            const isPaper = state.mode === 'paper';
+            const digitalEl = document.getElementById('canvas-container');
+            const paperEl = document.getElementById('paper-container');
+            const toolbarEl = document.getElementById('toolbar');
+            const headerWord = document.getElementById('header-word');
+            const btnGiveUp = document.getElementById('btn-giveup');
+
+            if (isPaper) {
+                digitalEl.style.display = 'none';
+                toolbarEl.style.display = 'none';
+                paperEl.style.display = 'flex';
+                headerWord.innerText = ""; 
+                btnGiveUp.style.display = 'none'; 
+                document.getElementById('paper-word').innerText = state.word; 
+            } else {
+                paperEl.style.display = 'none';
+                digitalEl.style.display = 'flex';
+                toolbarEl.style.display = 'flex';
+                headerWord.innerText = state.word; 
+                btnGiveUp.style.display = 'block';
+                resizeCanvas();
+                clearCanvas();
+                setColor('#2c3e50', document.querySelector('.color-btn'));
+            }
+            
+            let t = state.time;
+            document.getElementById('timer').innerText = t;
+            
+            if(state.timerInterval) clearInterval(state.timerInterval);
+            state.timerInterval = setInterval(() => {
+                t--;
+                document.getElementById('timer').innerText = t;
+                if(t <= 0) endRound(false);
+            }, 1000);
+        };
+
+        window.endRound = (win) => {
+            clearInterval(state.timerInterval);
+            SFX.play(win ? 'win' : 'fail');
+            
+            // Liberar Wake Lock (opcional, pero buena práctica)
+            if (wakeLock !== null) {
+                wakeLock.release().then(() => wakeLock = null);
+            }
+            
+            const fb = document.getElementById('feedback-txt');
+            fb.innerText = win ? "¡BIEN!" : "TIEMPO";
+            fb.style.color = win ? "#27ae60" : "#e74c3c";
+            fb.classList.add('pop');
+            
+            if(win) state.scores[state.turn]++;
+            state.turn = state.turn === 0 ? 1 : 0;
+
+            setTimeout(() => {
+                fb.classList.remove('pop');
+                document.getElementById('screen-game').classList.remove('active');
+                document.getElementById('screen-score').classList.add('active');
+                document.getElementById('score-1').innerText = state.scores[0];
+                document.getElementById('score-2').innerText = state.scores[1];
+            }, 1500);
+        };
+
+        window.showCastModal = () => {
+            document.getElementById('toast-cast').classList.add('show');
+            setTimeout(() => hideCast(), 5000);
+        };
+        window.hideCast = () => {
+            document.getElementById('toast-cast').classList.remove('show');
+        };
+
+        window.addEventListener('resize', resizeCanvas);
+
+        // Registro del Service Worker para PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch(() => {});
+            });
+        }
+    </script>
+</body>
+</html>
