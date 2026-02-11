@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="manifest" href="manifest.json">
+    <title>Yo Nunca - FranMa</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Roboto:wght@400;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-tranqui: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --bg-fiesta: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --bg-picante: linear-gradient(135deg, #434343 0%, #000000 100%);
+            --card-bg: #ffffff;
+        }
+
+        body {
+            margin: 0;
+            height: 100dvh;
+            font-family: 'Roboto', sans-serif;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-tranqui); /* Default */
+            transition: background 0.5s ease;
+        }
+
+        /* PANTALLAS */
+        .screen {
+            display: none;
+            width: 100%;
+            height: 100%;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+            animation: fadeIn 0.3s;
+        }
+        .active { display: flex; }
+        @keyframes fadeIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
+
+        /* HOME */
+        h1 {
+            font-family: 'Fredoka One', cursive;
+            font-size: 3.5rem;
+            color: white;
+            text-shadow: 0 4px 0 rgba(0,0,0,0.2);
+            margin: 0 0 10px 0;
+            text-align: center;
+        }
+        
+        .mode-btn {
+            width: 100%;
+            max-width: 300px;
+            padding: 20px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 20px;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            transition: transform 0.1s;
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
+        }
+        .mode-btn:active { transform: scale(0.95); }
+
+        .btn-tranqui { background: #4facfe; }
+        .btn-fiesta { background: #fa709a; }
+        .btn-picante { background: #2c3e50; border: 2px solid #e74c3c; }
+        .btn-picante::after { content: '🔞'; position: absolute; right: 20px; font-size: 1.2rem; }
+
+        /* JUEGO */
+        .card-container {
+            width: 100%;
+            max-width: 350px;
+            aspect-ratio: 3/4;
+            perspective: 1000px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            width: 100%;
+            height: 100%;
+            background: var(--card-bg);
+            border-radius: 25px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            box-sizing: border-box;
+            text-align: center;
+            position: relative;
+            transition: transform 0.3s;
+        }
+
+        .yo-nunca-label {
+            font-family: 'Fredoka One', cursive;
+            color: #ccc;
+            font-size: 1.5rem;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+
+        .phrase-text {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #333;
+            line-height: 1.4;
+        }
+
+        .next-btn {
+            background: white;
+            color: #333;
+            border: none;
+            padding: 20px 60px;
+            border-radius: 50px;
+            font-size: 1.5rem;
+            font-weight: 900;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            cursor: pointer;
+        }
+        .next-btn:active { transform: translateY(5px); box-shadow: none; }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        /* ETIQUETA DE MODO */
+        .mode-badge {
+            position: absolute;
+            top: 20px;
+            background: #eee;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #666;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="screen-home" class="screen active">
+        <h1 style="line-height: 0.8;">YO<br><span style="font-size: 5rem;">NUNCA</span></h1>
+        <p style="color: rgba(255,255,255,0.8); margin-bottom: 40px; font-weight: bold;">FRANMA PARTY</p>
+
+        <button class="mode-btn btn-tranqui" onclick="startGame('tranqui')">😊 Tranqui</button>
+        <button class="mode-btn btn-fiesta" onclick="startGame('fiesta')">🎉 Fiesta</button>
+        <button class="mode-btn btn-picante" onclick="startGame('picante')">🔥 Picante</button>
+    </div>
+
+    <div id="screen-game" class="screen">
+        <button class="back-btn" onclick="goHome()">←</button>
+        
+        <div class="card-container">
+            <div class="card" id="game-card">
+                <div class="mode-badge" id="mode-badge">MODO TRANQUI</div>
+                <div class="yo-nunca-label">YO NUNCA...</div>
+                <div class="phrase-text" id="phrase">Tocá SIGUIENTE para empezar</div>
+            </div>
+        </div>
+
+        <button class="next-btn" onclick="nextCard()">SIGUIENTE</button>
+    </div>
+
+    <script>
+        // --- BASE DE DATOS DE FRASES ---
+        const DB = {
+            tranqui: [
+                "me escapé de la escuela",
+                "comí comida que se cayó al piso",
+                "usé el cepillo de dientes de otra persona",
+                "fingí estar enfermo para faltar",
+                "me olvidé el nombre de alguien en el momento",
+                "stalkee a mi ex en redes sociales",
+                "mentí sobre mi edad",
+                "salí de casa sin ropa interior",
+                "me dormí en el cine",
+                "lloré con una película de Disney",
+                "tuve un amigo imaginario",
+                "me choqué contra una puerta de vidrio",
+                "canté en la ducha creyéndome cantante"
+            ],
+            fiesta: [
+                "vomité en vía pública",
+                "besé a más de una persona en una noche",
+                "me echaron de un boliche",
+                "me desperté sin saber dónde estaba",
+                "mandé un mensaje borracho del que me arrepentí",
+                "tuve una cita a ciegas que salió mal",
+                "me ligué al hermano/a de un amigo",
+                "mentí para conseguir un trago gratis",
+                "robé un vaso de un bar",
+                "me colé en una fiesta privada"
+            ],
+            picante: [
+                "tuve sexo en un lugar público",
+                "hice un trío",
+                "tuve sexo con alguien de esta sala",
+                "fingí un orgasmo",
+                "tuve sexo en la primera cita",
+                "me grabé teniendo relaciones",
+                "tuve un sueño erótico con un amigo/a",
+                "usé juguetes sexuales",
+                "fui a una playa nudista",
+                "tuve sexo en el auto"
+            ]
+        };
+
+        let currentDeck = [];
+        let usedDeck = [];
+        let currentMode = '';
+
+        function startGame(mode) {
+            currentMode = mode;
+            // Clonamos el array para no modificar el original
+            currentDeck = [...DB[mode]];
+            usedDeck = [];
+            
+            // Cambiar colores según el modo
+            const body = document.body;
+            const badge = document.getElementById('mode-badge');
+            
+            if(mode === 'tranqui') {
+                body.style.background = 'var(--bg-tranqui)';
+                badge.innerText = "😊 MODO TRANQUI";
+                badge.style.color = "#4facfe";
+            } else if(mode === 'fiesta') {
+                body.style.background = 'var(--bg-fiesta)';
+                badge.innerText = "🎉 MODO FIESTA";
+                badge.style.color = "#fa709a";
+            } else {
+                body.style.background = 'var(--bg-picante)';
+                badge.innerText = "🔥 MODO PICANTE";
+                badge.style.color = "#e74c3c";
+            }
+
+            document.getElementById('screen-home').classList.remove('active');
+            document.getElementById('screen-game').classList.add('active');
+            
+            nextCard(); // Sacar la primera carta
+        }
+
+        function nextCard() {
+            if (currentDeck.length === 0) {
+                // Si se acaban, reseteamos
+                currentDeck = [...usedDeck];
+                usedDeck = [];
+                // Mezclamos un poco visualmente avisando
+                document.getElementById('phrase').innerText = "¡Barajando de nuevo! 🔄";
+                setTimeout(() => pickRandom(), 1000);
+                return;
+            }
+            pickRandom();
+        }
+
+        function pickRandom() {
+            // Animación simple
+            const card = document.getElementById('game-card');
+            card.style.transform = "scale(0.95)";
+            setTimeout(() => {
+                const randomIndex = Math.floor(Math.random() * currentDeck.length);
+                const phrase = currentDeck[randomIndex];
+                
+                // Mover del mazo actual al usado
+                currentDeck.splice(randomIndex, 1);
+                usedDeck.push(phrase);
+
+                document.getElementById('phrase').innerText = phrase;
+                card.style.transform = "scale(1)";
+            }, 100);
+        }
+
+        function goHome() {
+            document.getElementById('screen-game').classList.remove('active');
+            document.getElementById('screen-home').classList.add('active');
+        }
+    </script>
+</body>
+</html>

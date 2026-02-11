@@ -50,7 +50,7 @@
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 25px;
             width: 100%;
-            max-width: 1000px; /* Un poco más ancho para que entren bien */
+            max-width: 1000px;
             perspective: 1000px;
         }
 
@@ -102,7 +102,7 @@
             transition: transform 0.2s;
         }
         
-        /* SI NO HAY IMAGEN, USAMOS EMOJI GRANDE */
+        /* EMOJI DE RESPALDO */
         .game-emoji {
             font-size: 4rem;
             margin-bottom: 10px;
@@ -335,6 +335,22 @@
                     <div class="close-btn" onclick="flip(event, 'c-mensaje')">×</div>
                     <p class="desc-text">Descifra el mensaje secreto o pásalo sin distorsiones.</p>
                     <a href="./mensaje/" class="play-btn">JUGAR</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-container" id="c-yonunca">
+            <div class="card-inner">
+                <div class="card-front" style="border-color: #fa709a;" onclick="go('yonunca')">
+                    <div class="info-btn" onclick="flip(event, 'c-yonunca')">i</div>
+                    <img src="./yonunca/icon.png" class="game-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+                    <div class="game-emoji" style="display:none">🍺</div>
+                    <div class="title" style="color: #fa709a;">YO NUNCA</div>
+                </div>
+                <div class="card-back">
+                    <div class="close-btn" onclick="flip(event, 'c-yonunca')">×</div>
+                    <p class="desc-text">Si lo hiciste, tomás. Elige entre modo Tranqui, Fiesta o Picante.</p>
+                    <a href="./yonunca/" class="play-btn">JUGAR</a>
                 </div>
             </div>
         </div>
