@@ -1,4 +1,4 @@
-const CACHE_NAME = 'misterios-v1';
+const CACHE_NAME = 'misterios-v2-big-db';
 const ASSETS = [
   './',
   './index.html',

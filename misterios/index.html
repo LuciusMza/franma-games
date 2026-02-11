@@ -7,147 +7,37 @@
     <title>Misterios - FranMa</title>
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;900&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg-color: #1a1a1a;
-            --card-bg: #f4f4f4;
-            --accent: #e74c3c; /* Rojo sangre */
-            --text-main: #2c3e50;
-        }
-
+        :root { --bg-color: #1a1a1a; --card-bg: #f4f4f4; --accent: #e74c3c; --text-main: #2c3e50; }
         * { -webkit-tap-highlight-color: transparent; user-select: none; box-sizing: border-box; }
-
-        body {
-            margin: 0;
-            height: 100dvh;
-            font-family: 'Roboto', sans-serif;
-            background-color: var(--bg-color);
-            background-image: radial-gradient(#333 1px, transparent 1px);
-            background-size: 20px 20px;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            color: white;
-        }
-
-        /* PANTALLAS */
-        .screen {
-            display: none;
-            width: 100%;
-            height: 100%;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            animation: fadeIn 0.5s;
-        }
+        body { margin: 0; height: 100dvh; font-family: 'Roboto', sans-serif; background-color: var(--bg-color); background-image: radial-gradient(#333 1px, transparent 1px); background-size: 20px 20px; overflow: hidden; display: flex; flex-direction: column; color: white; }
+        .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; padding: 20px; animation: fadeIn 0.5s; }
         .active { display: flex; }
         @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
-
-        /* HOME */
+        
         .title-box { text-align: center; margin-bottom: 40px; }
-        h1 {
-            font-family: 'Merriweather', serif;
-            font-size: 3.5rem;
-            margin: 0;
-            color: var(--accent);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            text-shadow: 0 4px 10px rgba(0,0,0,0.5);
-        }
+        h1 { font-family: 'Merriweather', serif; font-size: 3.5rem; margin: 0; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 4px 10px rgba(0,0,0,0.5); }
         .subtitle { color: #888; letter-spacing: 4px; font-size: 0.9rem; margin-top: 5px; }
-
-        .btn-start {
-            background: var(--accent);
-            color: white;
-            border: none;
-            padding: 20px 60px;
-            border-radius: 5px;
-            font-family: 'Merriweather', serif;
-            font-size: 1.5rem;
-            font-weight: 900;
-            box-shadow: 0 10px 20px rgba(231, 76, 60, 0.3);
-            cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: transform 0.1s;
-        }
+        .btn-start { background: var(--accent); color: white; border: none; padding: 20px 60px; border-radius: 5px; font-family: 'Merriweather', serif; font-size: 1.5rem; font-weight: 900; box-shadow: 0 10px 20px rgba(231, 76, 60, 0.3); cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: transform 0.1s; }
         .btn-start:active { transform: scale(0.95); }
 
-        /* JUEGO (TARJETA FLIP) */
-        .scene {
-            width: 100%;
-            max-width: 350px;
-            height: 450px;
-            perspective: 1000px;
-            margin-bottom: 30px;
-        }
-
-        .card {
-            width: 100%;
-            height: 100%;
-            position: relative;
-            transition: transform 0.6s;
-            transform-style: preserve-3d;
-            cursor: pointer;
-        }
-
-        .card.is-flipped {
-            transform: rotateY(180deg);
-        }
-
-        .card-face {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            -webkit-backface-visibility: hidden;
-            backface-visibility: hidden;
-            border-radius: 15px;
-            padding: 30px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            background: var(--card-bg);
-            color: var(--text-main);
-            border: 10px solid white;
-        }
-
-        .card-face.front {
-            /* Frente: El Acertijo */
-        }
-
-        .card-face.back {
-            transform: rotateY(180deg);
-            background: var(--text-main);
-            color: white;
-            border-color: var(--text-main);
-        }
-
-        .icon-top { font-size: 3rem; margin-bottom: 20px; color: var(--accent); }
-        .mistery-title { font-family: 'Merriweather', serif; font-size: 1.5rem; font-weight: 900; margin-bottom: 15px; text-transform: uppercase; }
-        .mistery-text { font-size: 1.2rem; line-height: 1.6; font-weight: 500; }
+        .scene { width: 100%; max-width: 350px; height: 450px; perspective: 1000px; margin-bottom: 30px; }
+        .card { width: 100%; height: 100%; position: relative; transition: transform 0.6s; transform-style: preserve-3d; cursor: pointer; }
+        .card.is-flipped { transform: rotateY(180deg); }
+        .card-face { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 15px; padding: 30px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); background: var(--card-bg); color: var(--text-main); border: 10px solid white; }
+        .card-face.back { transform: rotateY(180deg); background: var(--text-main); color: white; border-color: var(--text-main); }
         
+        .icon-top { font-size: 3rem; margin-bottom: 20px; color: var(--accent); }
+        .mistery-title { font-family: 'Merriweather', serif; font-size: 1.3rem; font-weight: 900; margin-bottom: 15px; text-transform: uppercase; }
+        .mistery-text { font-size: 1.1rem; line-height: 1.5; font-weight: 500; }
         .solution-label { color: var(--accent); font-weight: bold; margin-bottom: 10px; letter-spacing: 2px; }
         .tap-hint { position: absolute; bottom: 20px; font-size: 0.8rem; color: #999; text-transform: uppercase; letter-spacing: 1px; animation: pulse 2s infinite; }
-
         @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
 
-        /* CONTROLES */
         .controls { width: 100%; max-width: 350px; display: flex; gap: 10px; }
-        .btn-control {
-            flex: 1;
-            padding: 15px;
-            border: 1px solid #444;
-            background: rgba(255,255,255,0.1);
-            color: white;
-            border-radius: 10px;
-            font-weight: bold;
-            cursor: pointer;
-        }
+        .btn-control { flex: 1; padding: 15px; border: 1px solid #444; background: rgba(255,255,255,0.1); color: white; border-radius: 10px; font-weight: bold; cursor: pointer; }
         .btn-next { background: var(--accent); border-color: var(--accent); flex: 2; }
         
+        #counter { position: absolute; top: 10px; right: 10px; color: #555; font-size: 0.8rem; }
     </style>
 </head>
 <body>
@@ -156,96 +46,93 @@
         <div class="title-box">
             <div style="font-size: 4rem; margin-bottom: 10px;">🕵️‍♂️</div>
             <h1>Misterios</h1>
-            <div class="subtitle">BLACK STORIES</div>
+            <div class="subtitle">50 CASOS</div>
         </div>
         <button class="btn-start" onclick="startGame()">JUGAR</button>
         <p style="margin-top: 30px; font-size: 0.9rem; color: #666; max-width: 300px; text-align: center;">
-            Uno lee la tarjeta y la solución. Los demás preguntan para resolver el misterio.
+            Uno lee el caso y la solución. Los demás preguntan SÍ/NO para resolverlo.
         </p>
     </div>
 
     <div id="screen-game" class="screen">
+        <div id="counter"></div>
         <div class="scene">
             <div class="card" id="card" onclick="flipCard()">
-                
                 <div class="card-face front">
                     <div class="icon-top">❔</div>
                     <div class="mistery-title" id="m-title">Título</div>
-                    <div class="mistery-text" id="m-text">
-                        Texto del misterio...
-                    </div>
+                    <div class="mistery-text" id="m-text">...</div>
                     <div class="tap-hint">Toca para ver solución</div>
                 </div>
-
                 <div class="card-face back">
                     <div class="icon-top" style="color:white;">💡</div>
                     <div class="solution-label">SOLUCIÓN</div>
-                    <div class="mistery-text" id="m-solution" style="font-size: 1.1rem;">
-                        Aquí va la solución secreta.
-                    </div>
+                    <div class="mistery-text" id="m-solution">...</div>
                 </div>
-
             </div>
         </div>
-
         <div class="controls">
             <button class="btn-control" onclick="goHome()">SALIR</button>
-            <button class="btn-control btn-next" onclick="nextStory()">SIGUIENTE CASO</button>
+            <button class="btn-control btn-next" onclick="nextStory()">SIGUIENTE</button>
         </div>
     </div>
 
     <script>
+        // BASE DE DATOS EXTENDIDA (50 CASOS)
         const DB = [
-            {
-                title: "El Barman",
-                text: "Un hombre entra a un bar y pide un vaso de agua. El barman saca un arma y le apunta. El hombre dice 'Gracias' y se va.",
-                solution: "El hombre tenía hipo. El barman lo asustó con el arma para curárselo. Funcionó, por eso dio las gracias."
-            },
-            {
-                title: "Romeo y Julieta",
-                text: "Romeo y Julieta yacen muertos en el suelo de una habitación. Hay vidrios rotos y agua por todos lados. No hay nadie más.",
-                solution: "Romeo y Julieta son peces. La pecera se cayó (quizás por el viento o un gato) y se rompió, asfixiándolos."
-            },
-            {
-                title: "El Paquete",
-                text: "Un hombre yace muerto boca abajo en un campo. Tiene un paquete cerrado en la espalda. No hay huellas alrededor.",
-                solution: "El paquete es un paracaídas que no se abrió. El hombre saltó de un avión."
-            },
-            {
-                title: "La Música",
-                text: "La música se detuvo. Ella murió.",
-                solution: "Ella era una funambulista (equilibrista) de circo ciega. Hacía su acto guiándose por la música. Alguien apagó la música antes de tiempo, ella creyó que había llegado a la plataforma, dio un paso y cayó al vacío."
-            },
-            {
-                title: "El Auto",
-                text: "Un hombre empuja su auto hasta llegar a un hotel, y en ese momento sabe que está en bancarrota.",
-                solution: "Estaba jugando al Monopoly. Su ficha era el auto."
-            },
-            {
-                title: "Lluvia",
-                text: "Un hombre sale de su casa corriendo bajo una lluvia torrencial sin paraguas ni sombrero. Sin embargo, no se moja ni un pelo.",
-                solution: "El hombre era completamente calvo."
-            },
-            {
-                title: "La Cabaña",
-                text: "En una cabaña en la montaña hay dos hombres muertos. La cabaña está intacta, pero los hombres parecen haber muerto congelados, aunque hay leña y fósforos.",
-                solution: "Es la cabina de un avión que se estrelló (Cabin = Cabaña/Cabina). Murieron por la descompresión y el frío de la altura tras el accidente."
-            },
-            {
-                title: "El Túnel",
-                text: "Un tren entra en un túnel. Se escucha un grito y un hombre muere.",
-                solution: "El hombre volvía de una cirugía ocular exitosa. Iba en tren y, al entrar al túnel, creyó que se había quedado ciego de nuevo. Del shock le dio un infarto."
-            },
-            {
-                title: "Sopa de Gaviota",
-                text: "Un hombre entra a un restaurante, pide sopa de gaviota, prueba una cucharada, sale y se suicida.",
-                solution: "El hombre había naufragado años atrás. Su esposa murió de hambre. El capitán le dio 'sopa de gaviota' para sobrevivir. Al probar la verdadera sopa en el restaurante, se dio cuenta de que el sabor era distinto y comprendió que en la isla había comido carne humana (la de su esposa)."
-            },
-            {
-                title: "Mensaje de Voz",
-                text: "Un hombre escucha un mensaje en su contestador automático e inmediatamente se dispara.",
-                solution: "El hombre iba a irse de viaje. Programó las luces de su casa con un temporizador para despistar ladrones. Su esposa se fue antes. Él recibió un mensaje de la policía diciendo que su esposa murió al caer por las escaleras en la oscuridad. Él supo que el temporizador falló y se sintió culpable."
-            }
+            // LOS CLÁSICOS (1-10)
+            { t:"El Barman", q:"Un hombre entra a un bar y pide un vaso de agua. El barman le apunta con un arma. El hombre dice 'Gracias' y se va.", a:"El hombre tenía hipo. El susto se lo curó." },
+            { t:"Romeo y Julieta", q:"Romeo y Julieta muertos en el piso, agua y vidrios rotos. Nadie más en la habitación.", a:"Son peces. La pecera se cayó y se asfixiaron." },
+            { t:"El Paquete", q:"Un hombre yace muerto en el campo con un paquete cerrado en la espalda.", a:"El paquete es un paracaídas que no abrió." },
+            { t:"La Música", q:"La música paró y ella murió.", a:"Era una trapecista ciega. Se guiaba por la música para saber cuándo soltarse. Se cortó la luz/música antes y cayó al vacío." },
+            { t:"El Auto", q:"Un hombre empuja su auto, llega a un hotel y sabe que está en bancarrota.", a:"Juega al Monopoly. Su ficha es el auto." },
+            { t:"Lluvia", q:"Un hombre corre bajo la lluvia sin paraguas ni sombrero y no se moja el pelo.", a:"Es calvo." },
+            { t:"La Cabaña", q:"Dos muertos en una cabaña en la montaña. Hay leña pero murieron congelados.", a:"Es la cabina de un avión estrellado (Cabin). Murieron por el accidente/frío." },
+            { t:"El Túnel", q:"Un tren entra al túnel, se oye un grito y un hombre muere.", a:"Volvía de operarse la vista. Al entrar al túnel creyó que quedó ciego de nuevo y le dio un infarto." },
+            { t:"Sopa de Gaviota", q:"Prueba sopa de gaviota en un restaurante, sale y se suicida.", a:"Naufragó antes. Comió 'gaviota' para sobrevivir. Al probar la real, supo que había comido carne humana (su esposa)." },
+            { t:"Mensaje de Voz", q:"Escucha un mensaje en la contestadora y se pega un tiro.", a:"Programó luces para simular estar en casa mientras viajaba. Su esposa murió al caer por la escalera a oscuras. El mensaje confirmaba el corte de luz." },
+            
+            // LOS NUEVOS (11-50)
+            { t:"El Ascensor", q:"Un hombre vive en el 10º piso. Sube en ascensor al 7º y el resto por escalera. Si llueve, sube al 10º.", a:"Es enano. No llega al botón del 10. Si llueve usa el paraguas para tocarlo." },
+            { t:"El Cazador", q:"Un cazador apunta a un oso. Camina 1km al sur, 1km al este, 1km al norte y vuelve al inicio. ¿De qué color es el oso?", a:"Blanco. Está en el Polo Norte (único lugar donde eso es posible)." },
+            { t:"Carbón y Zanahoria", q:"Una zanahoria, un gorro y trozos de carbón tirados en el jardín. Nadie los tiró.", a:"Un muñeco de nieve que se derritió." },
+            { t:"Adán y Eva", q:"Un explorador ve dos cuerpos congelados en el hielo y sabe inmediatamente que son Adán y Eva.", a:"No tenían ombligo." },
+            { t:"El Globo", q:"Un hombre muerto en medio del desierto, desnudo, con un palito de fósforo en la mano.", a:"Iban en globo aerostático perdiendo altura. Tiraron todo (ropa incluida). Al final sortearon quién saltaba con los fósforos. Le tocó a él." },
+            { t:"El Brazo", q:"Un hombre recibe un paquete con un brazo humano. Lo mira y lo tira a la basura satisfecho.", a:"Otros dos hombres y él naufragaron. Acordaron cortarse un brazo cada uno para comer. Él fue rescatado antes de dar el suyo. El paquete es el brazo de un compañero reclamando la deuda." },
+            { t:"Viernes", q:"Un vaquero llega en Viernes, se queda dos días y se va en Viernes.", a:"Su caballo se llama Viernes." },
+            { t:"El Faro", q:"Un hombre apaga la luz y se va a dormir. A la mañana siguiente lee el diario y se suicida.", a:"Era el farero. Apagó el faro por error y provocó el naufragio de un barco con cientos de muertos." },
+            { t:"La Foto", q:"Una mujer saca una foto a su marido. Al revelarla, lo mata.", a:"En la foto aparecía el marido con su amante (no la vio al sacar la foto)." },
+            { t:"El Coche Rojo", q:"Un hombre va en un coche rojo. Atropella a alguien y huye. No usa luces y no hay luna, pero un testigo lo ve todo.", a:"Era de día." },
+            { t:"Sol Negro", q:"Abre la ventana, entra el sol y ella muere.", a:"Era una vampira." },
+            { t:"Gemelos", q:"Dos gemelos nacen el mismo día de la misma madre, pero no tienen la misma edad.", a:"Son trillizos (falta el tercero)." },
+            { t:"La Apuesta", q:"Un hombre apuesta que puede saltar desde un rascacielos y volver. Salta y vuelve.", a:"Saltó desde la ventana de la planta baja." },
+            { t:"El Libro", q:"Termina de leer un libro, apaga la luz y muere.", a:"Era ciego. Leía en braille. El veneno estaba en las páginas y lo absorbió por los dedos." },
+            { t:"La Maleta", q:"Un buzo muerto en medio de un bosque quemado.", a:"Lo recogió un avión hidrante al cargar agua de un lago y lo tiró sobre el incendio." },
+            { t:"Cumpleaños", q:"Una mujer muere en su cumpleaños mientras apagaba las velas.", a:"Se le prendió fuego el pelo o la ropa con las velas." },
+            { t:"Partida de Cartas", q:"Un hombre muerto sentado a una mesa con 53 cartas de bicicleta.", a:"Hacía trampa (53 cartas). Lo descubrieron y lo mataron." },
+            { t:"El Sueño", q:"Un hombre sueña que le cortan el cuello. Su mujer lo toca para despertarlo y él muere.", a:"Del susto le dio un infarto al coincidir el toque con el sueño." },
+            { t:"Sierra", q:"Un hombre entra a su casa, ve aserrín en el suelo y se suicida.", a:"Era el enano ciego del circo (o el de antes). Pensó que estaba creciendo, pero le habían serruchado el bastón/muebles. Creyó que perdía su trabajo." },
+            { t:"Caníbal", q:"Un hombre es invitado a cenar. Prueba la carne y se mata.", a:"Similar a la sopa de gaviota. Era carne de un animal que él creía extinto o carne humana." },
+            { t:"Dos en un auto", q:"Dos personas en un auto. Una está muerta, la otra viva pero no puede salir. El auto está intacto.", a:"No es un auto real. Es un coche fúnebre. El vivo es el chofer (o es un bebé atrapado)." },
+            { t:"El Perro", q:"Un perro cruza el desierto. Muere a mitad de camino.", a:"El perro es una pulga en un perro real." },
+            { t:"La Cuerda", q:"Un hombre muerto colgando de una cuerda en una habitación vacía. Hay un charco de agua abajo.", a:"Se subió a un bloque de hielo para ahorcarse. El hielo se derritió." },
+            { t:"El Sello", q:"Un hombre lame un sobre y muere.", a:"El pegamento del sobre estaba envenenado." },
+            { t:"Tenis", q:"Dos hombres juegan al tenis. Uno gana, pero ninguno de los dos agarra la pelota.", a:"Juegan al tenis en la Wii / Videojuego." },
+            { t:"El Barco", q:"Un barco está en el fondo del mar. La gente está bien.", a:"Es un submarino." },
+            { t:"Boxeo", q:"Un boxeador sale del ring sin un rasguño, pero muere minutos después.", a:"No peleaba él. Murió de otra cosa o lo mataron afuera." },
+            { t:"Cama", q:"Una mujer compra una cama nueva. Esa noche se acuesta y muere.", a:"Era una cama marinera mal armada y se le cayó la de arriba." },
+            { t:"El Funeral", q:"Una mujer conoce a un hombre en el funeral de su madre. Se enamora. Días después mata a su hermana.", a:"Para que el hombre vuelva a aparecer en el funeral de la hermana." },
+            { t:"Espías", q:"Dos espías intentan entrar a una base. El guardia dice '12', el espía dice '6' y pasa. Al otro le dicen '8', dice '4' y lo matan.", a:"No era la mitad. Era la cantidad de letras. Doce tiene 4 letras. Ocho tiene 4 letras." },
+            { t:"El Despertador", q:"Suena el despertador y el hombre muere.", a:"Era una bomba activada por la alarma." },
+            { t:"La Mosca", q:"Una mosca se posa en la taza de café. La mujer la tira, pide otro y al probarlo se enoja.", a:"El mozo trajo el mismo café (le había puesto azúcar antes)." },
+            { t:"Cine", q:"Dos personas entran al cine. Una es ciega, la otra muda. La ciega muere.", a:"La muda le describía la película escribiendo en su mano. Escribió algo venenoso/shockeante." },
+            { t:"El Retrato", q:"Un hombre mira un retrato y dice: 'No tengo hermanos, pero el padre de este hombre es el hijo de mi padre'.", a:"Es una foto de su hijo." },
+            { t:"Veneno", q:"Dos hombres toman el mismo whisky con hielo. Uno muere, el otro no.", a:"El veneno estaba en el hielo. El que vivió tomó rápido y el hielo no se derritió. El otro esperó." },
+            { t:"Parada de Autobús", q:"Tres personas en una parada: una anciana enferma, un amigo que te salvó la vida y el amor de tu vida. Solo tienes lugar para uno en tu auto.", a:"Le das el auto al amigo para que lleve a la anciana. Te quedas con el amor de tu vida." },
+            { t:"El Manco", q:"Un hombre manco entra a una tienda y sale con dos manos.", a:"Era una tienda de segunda mano (chiste/juego de palabras) o compró prótesis." },
+            { t:"El Mudo", q:"Un mudo quiere comprar un cepillo de dientes. Hace gestos. ¿Cómo hace un ciego para comprar lentes oscuros?", a:"Abre la boca y pide 'Lentes oscuros'." },
+            { t:"Sótano", q:"Una niña baja al sótano y no vuelve a subir.", a:"Se quedó jugando, no murió." },
+            { t:"El Avión", q:"Un avión se estrella en la frontera entre España y Francia. ¿Dónde entierran a los supervivientes?", a:"No se entierran supervivientes." }
         ];
 
         let currentDeck = [];
@@ -253,6 +140,11 @@
 
         function startGame() {
             currentDeck = [...DB];
+            // Mezclar array (Fisher-Yates)
+            for (let i = currentDeck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [currentDeck[i], currentDeck[j]] = [currentDeck[j], currentDeck[i]];
+            }
             usedDeck = [];
             document.getElementById('screen-home').classList.remove('active');
             document.getElementById('screen-game').classList.add('active');
@@ -260,27 +152,24 @@
         }
 
         function nextStory() {
-            // Resetear tarjeta si está girada
             const card = document.getElementById('card');
             card.classList.remove('is-flipped');
 
             setTimeout(() => {
                 if (currentDeck.length === 0) {
+                    alert("¡Te terminaste los 50 casos! Reiniciando...");
                     currentDeck = [...usedDeck];
                     usedDeck = [];
                 }
                 
-                const randomIndex = Math.floor(Math.random() * currentDeck.length);
-                const story = currentDeck[randomIndex];
-                
-                currentDeck.splice(randomIndex, 1);
+                const story = currentDeck.pop();
                 usedDeck.push(story);
 
-                // Cargar contenido
-                document.getElementById('m-title').innerText = story.title;
-                document.getElementById('m-text').innerText = story.text;
-                document.getElementById('m-solution').innerText = story.solution;
-            }, 300); // Esperar que se enderece la carta
+                document.getElementById('m-title').innerText = story.t;
+                document.getElementById('m-text').innerText = story.q;
+                document.getElementById('m-solution').innerText = story.a;
+                document.getElementById('counter').innerText = `Caso ${usedDeck.length} / ${DB.length}`;
+            }, 300);
         }
 
         function flipCard() {
