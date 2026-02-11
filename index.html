@@ -50,14 +50,14 @@
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 25px;
             width: 100%;
-            max-width: 800px;
+            max-width: 1000px; /* Un poco más ancho para que entren bien */
             perspective: 1000px;
         }
 
         .card-container {
             background-color: transparent;
             width: 100%;
-            height: 200px; /* Un poco más alto para que entre la imagen */
+            height: 200px;
             perspective: 1000px;
             cursor: pointer;
         }
@@ -89,26 +89,33 @@
             align-items: center;
             justify-content: center;
             border: 3px solid;
-            background-color: #34495e; /* Fondo por defecto */
+            background-color: #34495e;
         }
 
-        /* ESTILO DE LA IMAGEN DE PORTADA */
+        /* IMAGEN DE PORTADA */
         .game-cover {
-            width: 100px;
-            height: 100px;
-            object-fit: contain; /* Para que la imagen no se deforme */
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
             margin-bottom: 15px;
             filter: drop-shadow(0 5px 5px rgba(0,0,0,0.3));
             transition: transform 0.2s;
         }
         
-        .card-container:hover .game-cover {
+        /* SI NO HAY IMAGEN, USAMOS EMOJI GRANDE */
+        .game-emoji {
+            font-size: 4rem;
+            margin-bottom: 10px;
+            filter: drop-shadow(0 4px 2px rgba(0,0,0,0.3));
+        }
+
+        .card-container:hover .game-cover, .card-container:hover .game-emoji {
             transform: scale(1.1);
         }
 
         .title {
             font-family: 'Fredoka One', cursive;
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             color: white;
             text-transform: uppercase;
             text-decoration: none;
@@ -135,10 +142,7 @@
             z-index: 10;
         }
         
-        .info-btn:hover {
-            background: white;
-            color: #2c3e50;
-        }
+        .info-btn:hover { background: white; color: #2c3e50; }
 
         .card-back {
             background-color: #ecf0f1;
@@ -179,12 +183,7 @@
             line-height: 1;
         }
 
-        footer {
-            margin-top: auto;
-            padding-top: 40px;
-            color: #7f8c8d;
-            font-size: 0.8rem;
-        }
+        footer { margin-top: auto; padding-top: 40px; color: #7f8c8d; font-size: 0.8rem; }
     </style>
 </head>
 <body>
@@ -196,47 +195,146 @@
 
     <div class="games-grid">
         
-        <div class="card-container" id="card-taboo">
+        <div class="card-container" id="c-generala">
             <div class="card-inner">
-                <div class="card-front" style="border-color: #e74c3c;" onclick="playGame('taboo')">
-                    <div class="info-btn" onclick="flipCard(event, 'card-taboo')">i</div>
-                    <img src="./taboo/icon.png" class="game-cover" alt="Taboo Icon">
-                    <div class="title" style="color: #e74c3c;">TABOO</div>
+                <div class="card-front" style="border-color: #27ae60;" onclick="go('generala')">
+                    <div class="info-btn" onclick="flip(event, 'c-generala')">i</div>
+                    <img src="./generala/icon.png" class="game-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+                    <div class="game-emoji" style="display:none">🎲</div>
+                    <div class="title" style="color: #27ae60;">GENERALA</div>
                 </div>
                 <div class="card-back">
-                    <div class="close-btn" onclick="flipCard(event, 'card-taboo')">×</div>
-                    <p class="desc-text">Describe la palabra secreta sin usar las prohibidas. ¡Corre contra el reloj!</p>
-                    <a href="./taboo/" class="play-btn">JUGAR</a>
+                    <div class="close-btn" onclick="flip(event, 'c-generala')">×</div>
+                    <p class="desc-text">Lanza los dados, forma juegos y anota. ¡Incluye modo Obligada!</p>
+                    <a href="./generala/" class="play-btn">JUGAR</a>
                 </div>
             </div>
         </div>
 
-        <div class="card-container" id="card-pictionary">
+        <div class="card-container" id="c-pictionary">
             <div class="card-inner">
-                <div class="card-front" style="border-color: #e67e22;" onclick="playGame('pictionary')">
-                    <div class="info-btn" onclick="flipCard(event, 'card-pictionary')">i</div>
-                    <img src="./pictionary/icon.png" class="game-cover" alt="Pictionary Icon">
+                <div class="card-front" style="border-color: #e67e22;" onclick="go('pictionary')">
+                    <div class="info-btn" onclick="flip(event, 'c-pictionary')">i</div>
+                    <img src="./pictionary/icon.png" class="game-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+                    <div class="game-emoji" style="display:none">🎨</div>
                     <div class="title" style="color: #e67e22;">DIBUJALOO</div>
                 </div>
                 <div class="card-back">
-                    <div class="close-btn" onclick="flipCard(event, 'card-pictionary')">×</div>
-                    <p class="desc-text">Dibuja en pantalla o papel para que tu equipo adivine. ¡Sin hablar!</p>
+                    <div class="close-btn" onclick="flip(event, 'c-pictionary')">×</div>
+                    <p class="desc-text">Dibuja en pantalla o papel. Tu equipo debe adivinar antes del tiempo.</p>
                     <a href="./pictionary/" class="play-btn">JUGAR</a>
                 </div>
             </div>
         </div>
 
-        <div class="card-container" id="card-generala">
+        <div class="card-container" id="c-taboo">
             <div class="card-inner">
-                <div class="card-front" style="border-color: #27ae60;" onclick="playGame('generala')">
-                    <div class="info-btn" onclick="flipCard(event, 'card-generala')">i</div>
-                    <img src="./generala/icon.png" class="game-cover" alt="Generala Icon">
-                    <div class="title" style="color: #27ae60;">GENERALA</div>
+                <div class="card-front" style="border-color: #e74c3c;" onclick="go('taboo')">
+                    <div class="info-btn" onclick="flip(event, 'c-taboo')">i</div>
+                    <img src="./taboo/icon.png" class="game-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+                    <div class="game-emoji" style="display:none">🚫</div>
+                    <div class="title" style="color: #e74c3c;">TABOO</div>
                 </div>
                 <div class="card-back">
-                    <div class="close-btn" onclick="flipCard(event, 'card-generala')">×</div>
-                    <p class="desc-text">Lanza los dados, forma juegos y anota puntos. Incluye modo "Obligada".</p>
-                    <a href="./generala/" class="play-btn">JUGAR</a>
+                    <div class="close-btn" onclick="flip(event, 'c-taboo')">×</div>
+                    <p class="desc-text">Describe la palabra clave sin decir las prohibidas. ¡Rápido!</p>
+                    <a href="./taboo/" class="play-btn">JUGAR</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-container" id="c-rosco">
+            <div class="card-inner">
+                <div class="card-front" style="border-color: #3498db;" onclick="go('rosco')">
+                    <div class="info-btn" onclick="flip(event, 'c-rosco')">i</div>
+                    <img src="./rosco/icon.png" class="game-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+                    <div class="game-emoji" style="display:none">🅰️</div>
+                    <div class="title" style="color: #3498db;">ROSCO</div>
+                </div>
+                <div class="card-back">
+                    <div class="close-btn" onclick="flip(event, 'c-rosco')">×</div>
+                    <p class="desc-text">Completa el rosco respondiendo las definiciones de la A a la Z.</p>
+                    <a href="./rosco/" class="play-btn">JUGAR</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-container" id="c-100dicen">
+            <div class="card-inner">
+                <div class="card-front" style="border-color: #9b59b6;" onclick="go('100dicen')">
+                    <div class="info-btn" onclick="flip(event, 'c-100dicen')">i</div>
+                    <img src="./100dicen/icon.png" class="game-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+                    <div class="game-emoji" style="display:none">💯</div>
+                    <div class="title" style="color: #9b59b6;">100 DICEN</div>
+                </div>
+                <div class="card-back">
+                    <div class="close-btn" onclick="flip(event, 'c-100dicen')">×</div>
+                    <p class="desc-text">¿Qué responden los argentinos? Adivina la respuesta más popular.</p>
+                    <a href="./100dicen/" class="play-btn">JUGAR</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-container" id="c-trato">
+            <div class="card-inner">
+                <div class="card-front" style="border-color: #f1c40f;" onclick="go('tratohecho')">
+                    <div class="info-btn" onclick="flip(event, 'c-trato')">i</div>
+                    <img src="./tratohecho/icon.png" class="game-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+                    <div class="game-emoji" style="display:none">💼</div>
+                    <div class="title" style="color: #f1c40f;">TRATO HECHO</div>
+                </div>
+                <div class="card-back">
+                    <div class="close-btn" onclick="flip(event, 'c-trato')">×</div>
+                    <p class="desc-text">Elige tu maletín, descarta los demás y negocia con la banca.</p>
+                    <a href="./tratohecho/" class="play-btn">JUGAR</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-container" id="c-tiktak">
+            <div class="card-inner">
+                <div class="card-front" style="border-color: #e74c3c;" onclick="go('tiktak')">
+                    <div class="info-btn" onclick="flip(event, 'c-tiktak')">i</div>
+                    <img src="./tiktak/icon.png" class="game-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+                    <div class="game-emoji" style="display:none">💣</div>
+                    <div class="title" style="color: #e74c3c;">TIK TAK</div>
+                </div>
+                <div class="card-back">
+                    <div class="close-btn" onclick="flip(event, 'c-tiktak')">×</div>
+                    <p class="desc-text">Responde rápido y pasa la bomba antes de que explote.</p>
+                    <a href="./tiktak/" class="play-btn">JUGAR</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-container" id="c-diccionario">
+            <div class="card-inner">
+                <div class="card-front" style="border-color: #1abc9c;" onclick="go('diccionario')">
+                    <div class="info-btn" onclick="flip(event, 'c-diccionario')">i</div>
+                    <img src="./diccionario/icon.png" class="game-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+                    <div class="game-emoji" style="display:none">📖</div>
+                    <div class="title" style="color: #1abc9c;">DICCIONARIO</div>
+                </div>
+                <div class="card-back">
+                    <div class="close-btn" onclick="flip(event, 'c-diccionario')">×</div>
+                    <p class="desc-text">Inventa definiciones creíbles y engaña a tus amigos.</p>
+                    <a href="./diccionario/" class="play-btn">JUGAR</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-container" id="c-mensaje">
+            <div class="card-inner">
+                <div class="card-front" style="border-color: #95a5a6;" onclick="go('mensaje')">
+                    <div class="info-btn" onclick="flip(event, 'c-mensaje')">i</div>
+                    <img src="./mensaje/icon.png" class="game-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+                    <div class="game-emoji" style="display:none">💬</div>
+                    <div class="title" style="color: #95a5a6;">MENSAJE</div>
+                </div>
+                <div class="card-back">
+                    <div class="close-btn" onclick="flip(event, 'c-mensaje')">×</div>
+                    <p class="desc-text">Descifra el mensaje secreto o pásalo sin distorsiones.</p>
+                    <a href="./mensaje/" class="play-btn">JUGAR</a>
                 </div>
             </div>
         </div>
@@ -244,18 +342,17 @@
     </div>
 
     <footer>
-        Hecho con ❤️ para Fran & Ma
+        Hecho con ❤️ para Francisca Maria
     </footer>
 
     <script>
-        function flipCard(event, cardId) {
+        function flip(event, cardId) {
             event.stopPropagation();
-            const card = document.getElementById(cardId);
-            card.classList.toggle('flipped');
+            document.getElementById(cardId).classList.toggle('flipped');
         }
 
-        function playGame(gameFolder) {
-            window.location.href = './' + gameFolder + '/';
+        function go(folder) {
+            window.location.href = './' + folder + '/';
         }
     </script>
 
