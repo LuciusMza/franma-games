@@ -12,7 +12,10 @@
             --bg-fiesta: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
             --bg-picante: linear-gradient(135deg, #434343 0%, #000000 100%);
             --card-bg: #ffffff;
+            --text-color: #333;
         }
+
+        * { -webkit-tap-highlight-color: transparent; user-select: none; }
 
         body {
             margin: 0;
@@ -21,7 +24,7 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            background: var(--bg-tranqui); /* Default */
+            background: var(--bg-tranqui);
             transition: background 0.5s ease;
         }
 
@@ -36,11 +39,33 @@
             padding: 20px;
             box-sizing: border-box;
             animation: fadeIn 0.3s;
+            position: relative;
         }
         .active { display: flex; }
         @keyframes fadeIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
 
         /* HOME */
+        .top-bar {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 15px;
+            z-index: 50;
+        }
+        .icon-btn {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.4);
+            color: white;
+            width: 45px; height: 45px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .icon-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.4); }
+
         h1 {
             font-family: 'Fredoka One', cursive;
             font-size: 3.5rem;
@@ -154,11 +179,93 @@
             color: #666;
         }
 
+        /* MODALES */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 100;
+            display: none;
+            align-items: center; justify-content: center;
+            backdrop-filter: blur(5px);
+            animation: fadeIn 0.3s;
+        }
+        .modal-card {
+            background: white;
+            width: 90%; max-width: 320px;
+            padding: 25px;
+            border-radius: 25px;
+            color: #333;
+            text-align: left;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .modal-title {
+            margin: 0 0 15px 0;
+            font-family: 'Fredoka One', cursive;
+            color: #fa709a;
+            font-size: 1.8rem;
+            text-align: center;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        .opt-row {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 15px; font-weight: bold; font-size: 1.1rem;
+        }
+        
+        /* SWITCH */
+        .toggle-switch {
+            width: 50px; height: 28px; background: #ccc; border-radius: 30px;
+            position: relative; cursor: pointer; transition: 0.3s;
+        }
+        .toggle-switch::after {
+            content: ''; position: absolute; top: 2px; left: 2px;
+            width: 24px; height: 24px; background: white; border-radius: 50%;
+            transition: 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .toggle-switch.active { background: #fa709a; }
+        .toggle-switch.active::after { left: 24px; }
+
+        .btn-close-modal {
+            background: #333; color: white; border: none; width: 100%;
+            padding: 12px; border-radius: 15px; font-weight: bold; font-size: 1.1rem;
+            margin-top: 15px; cursor: pointer;
+        }
+
     </style>
 </head>
 <body>
 
+    <div id="modal-help" class="modal-overlay" onclick="toggleHelp()">
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <h2 class="modal-title">CÓMO JUGAR</h2>
+            <p><b>1. Leé la frase:</b><br>Ej: "Yo nunca fui preso".</p>
+            <p><b>2. Si lo hiciste:</b><br>Tomás un trago 🍺 o bajás un dedo 🖐️.</p>
+            <p><b>3. Anécdota:</b><br>Si sos el único que lo hizo, ¡tenés que contar la historia!</p>
+            <button class="btn-close-modal" onclick="toggleHelp()">ENTENDIDO</button>
+        </div>
+    </div>
+
+    <div id="modal-options" class="modal-overlay" onclick="toggleOptions()">
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <h2 class="modal-title">AJUSTES</h2>
+            <div class="opt-row">
+                <span>🔊 Sonido</span>
+                <div class="toggle-switch active" id="sw-sound" onclick="toggleSetting('sound')"></div>
+            </div>
+            <div class="opt-row">
+                <span>📳 Vibración</span>
+                <div class="toggle-switch active" id="sw-vibration" onclick="toggleSetting('vibration')"></div>
+            </div>
+            <button class="btn-close-modal" onclick="toggleOptions()">LISTO</button>
+        </div>
+    </div>
+
     <div id="screen-home" class="screen active">
+        <div class="top-bar">
+            <div class="icon-btn" onclick="toggleOptions()">⚙️</div>
+            <div class="icon-btn" onclick="toggleHelp()">?</div>
+        </div>
+
         <h1 style="line-height: 0.8;">YO<br><span style="font-size: 5rem;">NUNCA</span></h1>
         <p style="color: rgba(255,255,255,0.8); margin-bottom: 40px; font-weight: bold;">FRANMA PARTY</p>
 
@@ -182,46 +289,52 @@
     </div>
 
     <script>
+        // CONFIGURACIÓN
+        let settings = { sound: true, vibration: true };
+        
+        // SONIDOS (Generados por código, sin archivos externos)
+        const SFX = {
+            ctx: null,
+            init: function() {
+                if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            },
+            playPop: function() {
+                if (!settings.sound || !this.ctx) return;
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+                const o = this.ctx.createOscillator();
+                const g = this.ctx.createGain();
+                o.frequency.setValueAtTime(400, this.ctx.currentTime);
+                o.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.1);
+                g.gain.setValueAtTime(0.1, this.ctx.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
+                o.connect(g);
+                g.connect(this.ctx.destination);
+                o.start();
+                o.stop(this.ctx.currentTime + 0.1);
+            }
+        };
+
         // --- BASE DE DATOS DE FRASES ---
         const DB = {
             tranqui: [
-                "me escapé de la escuela",
-                "comí comida que se cayó al piso",
-                "usé el cepillo de dientes de otra persona",
-                "fingí estar enfermo para faltar",
-                "me olvidé el nombre de alguien en el momento",
-                "stalkee a mi ex en redes sociales",
-                "mentí sobre mi edad",
-                "salí de casa sin ropa interior",
-                "me dormí en el cine",
-                "lloré con una película de Disney",
-                "tuve un amigo imaginario",
-                "me choqué contra una puerta de vidrio",
-                "canté en la ducha creyéndome cantante"
+                "me escapé de la escuela", "comí comida que se cayó al piso", "usé el cepillo de dientes de otra persona",
+                "fingí estar enfermo para faltar", "me olvidé el nombre de alguien en el momento", "stalkee a mi ex en redes sociales",
+                "mentí sobre mi edad", "salí de casa sin ropa interior", "me dormí en el cine", "lloré con una película de Disney",
+                "tuve un amigo imaginario", "me choqué contra una puerta de vidrio", "canté en la ducha creyéndome cantante",
+                "robé algo de un hotel", "mentí en mi currículum", "fui al baño en una pileta", "me reí en un momento serio"
             ],
             fiesta: [
-                "vomité en vía pública",
-                "besé a más de una persona en una noche",
-                "me echaron de un boliche",
-                "me desperté sin saber dónde estaba",
-                "mandé un mensaje borracho del que me arrepentí",
-                "tuve una cita a ciegas que salió mal",
-                "me ligué al hermano/a de un amigo",
-                "mentí para conseguir un trago gratis",
-                "robé un vaso de un bar",
-                "me colé en una fiesta privada"
+                "vomité en vía pública", "besé a más de una persona en una noche", "me echaron de un boliche",
+                "me desperté sin saber dónde estaba", "mandé un mensaje borracho del que me arrepentí",
+                "tuve una cita a ciegas que salió mal", "me ligué al hermano/a de un amigo", "mentí para conseguir un trago gratis",
+                "robé un vaso de un bar", "me colé en una fiesta privada", "bailé arriba de una mesa", "perdí el celular en una fiesta",
+                "me besé con un amigo/a", "me olvidé lo que pasó la noche anterior"
             ],
             picante: [
-                "tuve sexo en un lugar público",
-                "hice un trío",
-                "tuve sexo con alguien de esta sala",
-                "fingí un orgasmo",
-                "tuve sexo en la primera cita",
-                "me grabé teniendo relaciones",
-                "tuve un sueño erótico con un amigo/a",
-                "usé juguetes sexuales",
-                "fui a una playa nudista",
-                "tuve sexo en el auto"
+                "tuve sexo en un lugar público", "hice un trío", "tuve sexo con alguien de esta sala", "fingí un orgasmo",
+                "tuve sexo en la primera cita", "me grabé teniendo relaciones", "tuve un sueño erótico con un amigo/a",
+                "usé juguetes sexuales", "fui a una playa nudista", "tuve sexo en el auto", "tuve sexo en el trabajo",
+                "le fui infiel a una pareja", "mandé nudes", "tuve una aventura de una noche", "tuve sexo en el cine"
             ]
         };
 
@@ -229,64 +342,82 @@
         let usedDeck = [];
         let currentMode = '';
 
+        function toggleHelp() {
+            const el = document.getElementById('modal-help');
+            el.style.display = el.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        function toggleOptions() {
+            const el = document.getElementById('modal-options');
+            el.style.display = el.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        function toggleSetting(key) {
+            settings[key] = !settings[key];
+            const sw = document.getElementById('sw-' + key);
+            if(settings[key]) sw.classList.add('active'); else sw.classList.remove('active');
+        }
+
         function startGame(mode) {
+            SFX.init(); // Inicializar audio
             currentMode = mode;
-            // Clonamos el array para no modificar el original
             currentDeck = [...DB[mode]];
             usedDeck = [];
             
-            // Cambiar colores según el modo
+            // Estilos según modo
             const body = document.body;
             const badge = document.getElementById('mode-badge');
             
             if(mode === 'tranqui') {
                 body.style.background = 'var(--bg-tranqui)';
-                badge.innerText = "😊 MODO TRANQUI";
-                badge.style.color = "#4facfe";
+                badge.innerText = "😊 MODO TRANQUI"; badge.style.color = "#4facfe";
             } else if(mode === 'fiesta') {
                 body.style.background = 'var(--bg-fiesta)';
-                badge.innerText = "🎉 MODO FIESTA";
-                badge.style.color = "#fa709a";
+                badge.innerText = "🎉 MODO FIESTA"; badge.style.color = "#fa709a";
             } else {
                 body.style.background = 'var(--bg-picante)';
-                badge.innerText = "🔥 MODO PICANTE";
-                badge.style.color = "#e74c3c";
+                badge.innerText = "🔥 MODO PICANTE"; badge.style.color = "#e74c3c";
             }
 
             document.getElementById('screen-home').classList.remove('active');
             document.getElementById('screen-game').classList.add('active');
             
-            nextCard(); // Sacar la primera carta
+            nextCard(); 
         }
 
         function nextCard() {
+            if (settings.vibration && navigator.vibrate) navigator.vibrate(30); // Vibración corta
+            SFX.playPop();
+
             if (currentDeck.length === 0) {
-                // Si se acaban, reseteamos
                 currentDeck = [...usedDeck];
                 usedDeck = [];
-                // Mezclamos un poco visualmente avisando
                 document.getElementById('phrase').innerText = "¡Barajando de nuevo! 🔄";
-                setTimeout(() => pickRandom(), 1000);
+                setTimeout(() => pickRandom(), 800);
                 return;
             }
             pickRandom();
         }
 
         function pickRandom() {
-            // Animación simple
             const card = document.getElementById('game-card');
-            card.style.transform = "scale(0.95)";
+            
+            // Efecto visual simple de cambio
+            card.style.opacity = "0";
+            card.style.transform = "scale(0.9) translateY(20px)";
+
             setTimeout(() => {
                 const randomIndex = Math.floor(Math.random() * currentDeck.length);
                 const phrase = currentDeck[randomIndex];
                 
-                // Mover del mazo actual al usado
                 currentDeck.splice(randomIndex, 1);
                 usedDeck.push(phrase);
 
                 document.getElementById('phrase').innerText = phrase;
-                card.style.transform = "scale(1)";
-            }, 100);
+                
+                card.style.opacity = "1";
+                card.style.transform = "scale(1) translateY(0)";
+            }, 200);
         }
 
         function goHome() {
