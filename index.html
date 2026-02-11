@@ -355,6 +355,22 @@
             </div>
         </div>
 
+        <div class="card-container" id="c-misterios">
+            <div class="card-inner">
+                <div class="card-front" style="border-color: #e74c3c; background: #1a1a1a;" onclick="go('misterios')">
+                    <div class="info-btn" onclick="flip(event, 'c-misterios')">i</div>
+                    <img src="./misterios/icon.png" class="game-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+                    <div class="game-emoji" style="display:none">🕵️‍♂️</div>
+                    <div class="title" style="color: #e74c3c;">MISTERIOS</div>
+                </div>
+                <div class="card-back">
+                    <div class="close-btn" onclick="flip(event, 'c-misterios')">×</div>
+                    <p class="desc-text">Resuelvan acertijos macabros haciendo preguntas de SÍ o NO.</p>
+                    <a href="./misterios/" class="play-btn">JUGAR</a>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <footer>

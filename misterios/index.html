@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="manifest" href="manifest.json">
+    <title>Misterios - FranMa</title>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;900&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #1a1a1a;
+            --card-bg: #f4f4f4;
+            --accent: #e74c3c; /* Rojo sangre */
+            --text-main: #2c3e50;
+        }
+
+        * { -webkit-tap-highlight-color: transparent; user-select: none; box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            height: 100dvh;
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-color);
+            background-image: radial-gradient(#333 1px, transparent 1px);
+            background-size: 20px 20px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            color: white;
+        }
+
+        /* PANTALLAS */
+        .screen {
+            display: none;
+            width: 100%;
+            height: 100%;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: fadeIn 0.5s;
+        }
+        .active { display: flex; }
+        @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+
+        /* HOME */
+        .title-box { text-align: center; margin-bottom: 40px; }
+        h1 {
+            font-family: 'Merriweather', serif;
+            font-size: 3.5rem;
+            margin: 0;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        .subtitle { color: #888; letter-spacing: 4px; font-size: 0.9rem; margin-top: 5px; }
+
+        .btn-start {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 20px 60px;
+            border-radius: 5px;
+            font-family: 'Merriweather', serif;
+            font-size: 1.5rem;
+            font-weight: 900;
+            box-shadow: 0 10px 20px rgba(231, 76, 60, 0.3);
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: transform 0.1s;
+        }
+        .btn-start:active { transform: scale(0.95); }
+
+        /* JUEGO (TARJETA FLIP) */
+        .scene {
+            width: 100%;
+            max-width: 350px;
+            height: 450px;
+            perspective: 1000px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            cursor: pointer;
+        }
+
+        .card.is-flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 15px;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            background: var(--card-bg);
+            color: var(--text-main);
+            border: 10px solid white;
+        }
+
+        .card-face.front {
+            /* Frente: El Acertijo */
+        }
+
+        .card-face.back {
+            transform: rotateY(180deg);
+            background: var(--text-main);
+            color: white;
+            border-color: var(--text-main);
+        }
+
+        .icon-top { font-size: 3rem; margin-bottom: 20px; color: var(--accent); }
+        .mistery-title { font-family: 'Merriweather', serif; font-size: 1.5rem; font-weight: 900; margin-bottom: 15px; text-transform: uppercase; }
+        .mistery-text { font-size: 1.2rem; line-height: 1.6; font-weight: 500; }
+        
+        .solution-label { color: var(--accent); font-weight: bold; margin-bottom: 10px; letter-spacing: 2px; }
+        .tap-hint { position: absolute; bottom: 20px; font-size: 0.8rem; color: #999; text-transform: uppercase; letter-spacing: 1px; animation: pulse 2s infinite; }
+
+        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+
+        /* CONTROLES */
+        .controls { width: 100%; max-width: 350px; display: flex; gap: 10px; }
+        .btn-control {
+            flex: 1;
+            padding: 15px;
+            border: 1px solid #444;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn-next { background: var(--accent); border-color: var(--accent); flex: 2; }
+        
+    </style>
+</head>
+<body>
+
+    <div id="screen-home" class="screen active">
+        <div class="title-box">
+            <div style="font-size: 4rem; margin-bottom: 10px;">🕵️‍♂️</div>
+            <h1>Misterios</h1>
+            <div class="subtitle">BLACK STORIES</div>
+        </div>
+        <button class="btn-start" onclick="startGame()">JUGAR</button>
+        <p style="margin-top: 30px; font-size: 0.9rem; color: #666; max-width: 300px; text-align: center;">
+            Uno lee la tarjeta y la solución. Los demás preguntan para resolver el misterio.
+        </p>
+    </div>
+
+    <div id="screen-game" class="screen">
+        <div class="scene">
+            <div class="card" id="card" onclick="flipCard()">
+                
+                <div class="card-face front">
+                    <div class="icon-top">❔</div>
+                    <div class="mistery-title" id="m-title">Título</div>
+                    <div class="mistery-text" id="m-text">
+                        Texto del misterio...
+                    </div>
+                    <div class="tap-hint">Toca para ver solución</div>
+                </div>
+
+                <div class="card-face back">
+                    <div class="icon-top" style="color:white;">💡</div>
+                    <div class="solution-label">SOLUCIÓN</div>
+                    <div class="mistery-text" id="m-solution" style="font-size: 1.1rem;">
+                        Aquí va la solución secreta.
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn-control" onclick="goHome()">SALIR</button>
+            <button class="btn-control btn-next" onclick="nextStory()">SIGUIENTE CASO</button>
+        </div>
+    </div>
+
+    <script>
+        const DB = [
+            {
+                title: "El Barman",
+                text: "Un hombre entra a un bar y pide un vaso de agua. El barman saca un arma y le apunta. El hombre dice 'Gracias' y se va.",
+                solution: "El hombre tenía hipo. El barman lo asustó con el arma para curárselo. Funcionó, por eso dio las gracias."
+            },
+            {
+                title: "Romeo y Julieta",
+                text: "Romeo y Julieta yacen muertos en el suelo de una habitación. Hay vidrios rotos y agua por todos lados. No hay nadie más.",
+                solution: "Romeo y Julieta son peces. La pecera se cayó (quizás por el viento o un gato) y se rompió, asfixiándolos."
+            },
+            {
+                title: "El Paquete",
+                text: "Un hombre yace muerto boca abajo en un campo. Tiene un paquete cerrado en la espalda. No hay huellas alrededor.",
+                solution: "El paquete es un paracaídas que no se abrió. El hombre saltó de un avión."
+            },
+            {
+                title: "La Música",
+                text: "La música se detuvo. Ella murió.",
+                solution: "Ella era una funambulista (equilibrista) de circo ciega. Hacía su acto guiándose por la música. Alguien apagó la música antes de tiempo, ella creyó que había llegado a la plataforma, dio un paso y cayó al vacío."
+            },
+            {
+                title: "El Auto",
+                text: "Un hombre empuja su auto hasta llegar a un hotel, y en ese momento sabe que está en bancarrota.",
+                solution: "Estaba jugando al Monopoly. Su ficha era el auto."
+            },
+            {
+                title: "Lluvia",
+                text: "Un hombre sale de su casa corriendo bajo una lluvia torrencial sin paraguas ni sombrero. Sin embargo, no se moja ni un pelo.",
+                solution: "El hombre era completamente calvo."
+            },
+            {
+                title: "La Cabaña",
+                text: "En una cabaña en la montaña hay dos hombres muertos. La cabaña está intacta, pero los hombres parecen haber muerto congelados, aunque hay leña y fósforos.",
+                solution: "Es la cabina de un avión que se estrelló (Cabin = Cabaña/Cabina). Murieron por la descompresión y el frío de la altura tras el accidente."
+            },
+            {
+                title: "El Túnel",
+                text: "Un tren entra en un túnel. Se escucha un grito y un hombre muere.",
+                solution: "El hombre volvía de una cirugía ocular exitosa. Iba en tren y, al entrar al túnel, creyó que se había quedado ciego de nuevo. Del shock le dio un infarto."
+            },
+            {
+                title: "Sopa de Gaviota",
+                text: "Un hombre entra a un restaurante, pide sopa de gaviota, prueba una cucharada, sale y se suicida.",
+                solution: "El hombre había naufragado años atrás. Su esposa murió de hambre. El capitán le dio 'sopa de gaviota' para sobrevivir. Al probar la verdadera sopa en el restaurante, se dio cuenta de que el sabor era distinto y comprendió que en la isla había comido carne humana (la de su esposa)."
+            },
+            {
+                title: "Mensaje de Voz",
+                text: "Un hombre escucha un mensaje en su contestador automático e inmediatamente se dispara.",
+                solution: "El hombre iba a irse de viaje. Programó las luces de su casa con un temporizador para despistar ladrones. Su esposa se fue antes. Él recibió un mensaje de la policía diciendo que su esposa murió al caer por las escaleras en la oscuridad. Él supo que el temporizador falló y se sintió culpable."
+            }
+        ];
+
+        let currentDeck = [];
+        let usedDeck = [];
+
+        function startGame() {
+            currentDeck = [...DB];
+            usedDeck = [];
+            document.getElementById('screen-home').classList.remove('active');
+            document.getElementById('screen-game').classList.add('active');
+            nextStory();
+        }
+
+        function nextStory() {
+            // Resetear tarjeta si está girada
+            const card = document.getElementById('card');
+            card.classList.remove('is-flipped');
+
+            setTimeout(() => {
+                if (currentDeck.length === 0) {
+                    currentDeck = [...usedDeck];
+                    usedDeck = [];
+                }
+                
+                const randomIndex = Math.floor(Math.random() * currentDeck.length);
+                const story = currentDeck[randomIndex];
+                
+                currentDeck.splice(randomIndex, 1);
+                usedDeck.push(story);
+
+                // Cargar contenido
+                document.getElementById('m-title').innerText = story.title;
+                document.getElementById('m-text').innerText = story.text;
+                document.getElementById('m-solution').innerText = story.solution;
+            }, 300); // Esperar que se enderece la carta
+        }
+
+        function flipCard() {
+            document.getElementById('card').classList.toggle('is-flipped');
+        }
+
+        function goHome() {
+            document.getElementById('screen-game').classList.remove('active');
+            document.getElementById('screen-home').classList.add('active');
+        }
+    </script>
+</body>
+</html>
