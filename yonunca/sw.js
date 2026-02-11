@@ -1,4 +1,4 @@
-const CACHE_NAME = 'yonunca-v1';
+const CACHE_NAME = 'yonunca-v2-features';
 const ASSETS = [
   './',
   './index.html',
