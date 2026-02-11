@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="manifest" href="manifest.json">
+    <title>Mímica - FranMa</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Roboto:wght@400;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-home: #8e44ad;
+            --bg-game: #2c3e50;
+            --green: #2ecc71;
+            --red: #e74c3c;
+            --orange: #e67e22;
+        }
+
+        * { -webkit-tap-highlight-color: transparent; user-select: none; box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            height: 100dvh;
+            font-family: 'Roboto', sans-serif;
+            overflow: hidden;
+            background-color: var(--bg-home);
+            color: white;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* PANTALLAS */
+        .screen {
+            display: none;
+            width: 100%;
+            height: 100%;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: fadeIn 0.3s;
+        }
+        .active { display: flex; }
+        @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+
+        /* HOME */
+        .title-box { text-align: center; margin-bottom: 20px; }
+        h1 {
+            font-family: 'Fredoka One', cursive;
+            font-size: 3rem;
+            margin: 0;
+            text-shadow: 0 4px 0 rgba(0,0,0,0.2);
+            line-height: 1;
+        }
+
+        .cat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .cat-btn {
+            background: rgba(255,255,255,0.2);
+            border: 3px solid rgba(255,255,255,0.4);
+            border-radius: 20px;
+            padding: 20px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.1s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        .cat-btn:active { transform: scale(0.95); background: rgba(255,255,255,0.4); }
+        .cat-icon { font-size: 2.5rem; }
+        .cat-name { font-weight: 900; font-size: 1rem; text-transform: uppercase; }
+
+        /* JUEGO */
+        #screen-game { background: var(--bg-game); text-align: center; }
+        
+        .timer-bar {
+            position: absolute;
+            top: 0; left: 0;
+            height: 10px;
+            background: var(--orange);
+            width: 100%;
+            transition: width 1s linear;
+        }
+
+        .word-card {
+            background: white;
+            color: #333;
+            width: 90%;
+            max-width: 350px;
+            height: 250px; /* Grande apaisada */
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transform: rotate(-2deg);
+        }
+
+        #current-word {
+            font-family: 'Fredoka One', cursive;
+            font-size: 3rem;
+            line-height: 1.1;
+            text-transform: uppercase;
+            padding: 20px;
+        }
+
+        /* BOTONES JUEGO */
+        .game-controls {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            max-width: 350px;
+        }
+
+        .btn-action {
+            flex: 1;
+            height: 80px;
+            border-radius: 20px;
+            border: none;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: white;
+            box-shadow: 0 8px 0 rgba(0,0,0,0.3);
+            cursor: pointer;
+        }
+        .btn-action:active { transform: translateY(4px); box-shadow: none; }
+        
+        .btn-pass { background: var(--red); }
+        .btn-correct { background: var(--green); }
+
+        /* RESULTADOS */
+        #screen-result { background: var(--bg-home); }
+        .score-big { font-size: 6rem; font-family: 'Fredoka One'; margin: 0; }
+        .score-label { font-size: 1.5rem; opacity: 0.8; margin-bottom: 30px; }
+        
+        .btn-home {
+            background: white; color: var(--bg-home);
+            border: none; padding: 15px 40px;
+            border-radius: 50px; font-weight: 900; font-size: 1.2rem;
+        }
+
+        .ready-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 100;
+            display: none;
+            flex-direction: column;
+            align-items: center; justify-content: center;
+        }
+        .countdown { font-size: 8rem; font-family: 'Fredoka One'; animation: pop 0.5s; }
+        @keyframes pop { from{transform:scale(0);} to{transform:scale(1);} }
+
+    </style>
+</head>
+<body>
+
+    <div id="screen-home" class="screen active">
+        <div class="title-box">
+            <h1>DÍGALO<br>CON MÍMICA</h1>
+            <p>¡Ponte el celular en la frente!</p>
+        </div>
+
+        <div class="cat-grid">
+            <div class="cat-btn" onclick="startPreGame('peliculas')">
+                <span class="cat-icon">🎬</span>
+                <span class="cat-name">Películas</span>
+            </div>
+            <div class="cat-btn" onclick="startPreGame('personajes')">
+                <span class="cat-icon">🦸</span>
+                <span class="cat-name">Personajes</span>
+            </div>
+            <div class="cat-btn" onclick="startPreGame('animales')">
+                <span class="cat-icon">🦁</span>
+                <span class="cat-name">Animales</span>
+            </div>
+            <div class="cat-btn" onclick="startPreGame('acciones')">
+                <span class="cat-icon">🏃</span>
+                <span class="cat-name">Acciones</span>
+            </div>
+        </div>
+        
+        <button onclick="location.href='../index.html'" style="margin-top:20px; background:none; border:none; color:rgba(255,255,255,0.6); font-weight:bold;">VOLVER AL MENÚ</button>
+    </div>
+
+    <div id="ready-overlay" class="ready-overlay">
+        <div style="font-size:1.5rem; margin-bottom:20px;">PONETELO EN LA FRENTE</div>
+        <div id="countdown-num" class="countdown">3</div>
+    </div>
+
+    <div id="screen-game" class="screen">
+        <div class="timer-bar" id="timer-bar"></div>
+        
+        <div style="font-size:1.2rem; margin-bottom:10px; opacity:0.7;">TIEMPO: <span id="time-left">60</span>s</div>
+        
+        <div class="word-card">
+            <div id="current-word">PREPARADOS</div>
+        </div>
+
+        <div class="game-controls">
+            <button class="btn-action btn-pass" onclick="handleAnswer(false)">PASO 👎</button>
+            <button class="btn-action btn-correct" onclick="handleAnswer(true)">¡SÍ! 👍</button>
+        </div>
+    </div>
+
+    <div id="screen-result" class="screen">
+        <h1>¡TIEMPO!</h1>
+        <div class="score-label">ACERTASTE</div>
+        <div class="score-big" id="final-score">0</div>
+        <button class="btn-home" onclick="location.reload()">JUGAR OTRA VEZ</button>
+    </div>
+
+    <script>
+        const DB = {
+            peliculas: ["Harry Potter", "Titanic", "Star Wars", "El Rey León", "Jurassic Park", "Matrix", "Frozen", "Shrek", "Avatar", "Toy Story", "Batman", "Spider-Man", "Los Vengadores", "Volver al Futuro", "Coco", "El Padrino", "Rocky", "Terminator", "IT", "Barbie"],
+            personajes: ["Messi", "Mickey Mouse", "Superman", "Shakira", "Homero Simpson", "Papa Francisco", "Maradona", "Bob Esponja", "Batman", "Harry Potter", "Pikachu", "La Sirenita", "Donald Trump", "El Chavo", "Goku", "Darth Vader", "Mujer Maravilla", "Joker", "Mario Bros", "Elsa"],
+            animales: ["León", "Mono", "Elefante", "Perro", "Gato", "Serpiente", "Gallina", "Vaca", "Canguro", "Pingüino", "Jirafa", "Cocodrilo", "Dinosaurio", "Águila", "Tiburón", "Delfín", "Mosquito", "Rana", "Caballo", "Cerdo"],
+            acciones: ["Bailar", "Dormir", "Cocinar", "Manejar", "Nadar", "Escribir", "Pescar", "Cantar", "Llorar", "Reír", "Saltar", "Pintar", "Comer", "Besar", "Pelear", "Volar", "Planchar", "Barrer", "Maquillarse", "Sacar una foto"]
+        };
+
+        let currentWords = [];
+        let score = 0;
+        let timeLeft = 60;
+        let timerInterval = null;
+        let isGameActive = false;
+
+        const SFX = {
+            ctx: null,
+            init: function() { if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
+            play: function(type) {
+                if(!this.ctx) return;
+                if(this.ctx.state === 'suspended') this.ctx.resume();
+                const o = this.ctx.createOscillator();
+                const g = this.ctx.createGain();
+                if(type === 'correct') { o.frequency.value = 600; o.type = 'sine'; o.start(); o.stop(this.ctx.currentTime + 0.1); }
+                else if(type === 'pass') { o.frequency.value = 200; o.type = 'sawtooth'; o.start(); o.stop(this.ctx.currentTime + 0.1); }
+                else if(type === 'end') { o.frequency.value = 100; o.type = 'square'; o.start(); o.stop(this.ctx.currentTime + 0.5); }
+                o.connect(g); g.connect(this.ctx.destination);
+                g.gain.exponentialRampToValueAtTime(0.00001, this.ctx.currentTime + (type==='end'?0.5:0.1));
+            }
+        };
+
+        function startPreGame(cat) {
+            SFX.init();
+            currentWords = [...DB[cat]];
+            // Mezclar palabras
+            currentWords.sort(() => Math.random() - 0.5);
+            
+            document.getElementById('ready-overlay').style.display = 'flex';
+            
+            let count = 3;
+            const counterEl = document.getElementById('countdown-num');
+            counterEl.innerText = count;
+
+            const int = setInterval(() => {
+                count--;
+                if(count > 0) {
+                    counterEl.innerText = count;
+                    counterEl.style.animation = 'none';
+                    counterEl.offsetHeight; /* trigger reflow */
+                    counterEl.style.animation = 'pop 0.5s';
+                } else {
+                    clearInterval(int);
+                    document.getElementById('ready-overlay').style.display = 'none';
+                    startGame();
+                }
+            }, 1000);
+        }
+
+        function startGame() {
+            document.getElementById('screen-home').classList.remove('active');
+            document.getElementById('screen-game').classList.add('active');
+            score = 0;
+            timeLeft = 60;
+            isGameActive = true;
+            nextWord();
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('time-left').innerText = timeLeft;
+                document.getElementById('timer-bar').style.width = (timeLeft/60*100) + "%";
+                
+                if(timeLeft <= 0) endGame();
+            }, 1000);
+        }
+
+        function nextWord() {
+            if(currentWords.length === 0) { endGame(); return; }
+            const word = currentWords.pop();
+            document.getElementById('current-word').innerText = word;
+        }
+
+        function handleAnswer(correct) {
+            if(!isGameActive) return;
+            if(correct) {
+                score++;
+                SFX.play('correct');
+                document.getElementById('screen-game').style.backgroundColor = "#2ecc71"; // Flash verde
+            } else {
+                SFX.play('pass');
+                document.getElementById('screen-game').style.backgroundColor = "#e74c3c"; // Flash rojo
+            }
+            
+            setTimeout(() => {
+                document.getElementById('screen-game').style.backgroundColor = "#2c3e50"; // Volver a azul
+            }, 200);
+
+            nextWord();
+        }
+
+        function endGame() {
+            isGameActive = false;
+            clearInterval(timerInterval);
+            SFX.play('end');
+            document.getElementById('screen-game').classList.remove('active');
+            document.getElementById('screen-result').classList.add('active');
+            document.getElementById('final-score').innerText = score;
+        }
+    </script>
+</body>
+</html>
