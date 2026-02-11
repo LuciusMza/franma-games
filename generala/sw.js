@@ -1,4 +1,4 @@
-const CACHE_NAME = 'generala-v5';
+const CACHE_NAME = 'generala-v100';
 const ASSETS = [
   './',
   './index.html',
