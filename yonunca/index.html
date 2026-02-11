@@ -12,7 +12,6 @@
             --bg-fiesta: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
             --bg-picante: linear-gradient(135deg, #434343 0%, #000000 100%);
             --card-bg: #ffffff;
-            --text-color: #333;
         }
 
         * { -webkit-tap-highlight-color: transparent; user-select: none; }
@@ -44,7 +43,7 @@
         .active { display: flex; }
         @keyframes fadeIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
 
-        /* HOME */
+        /* BARRA SUPERIOR (NUEVO) */
         .top-bar {
             position: absolute;
             top: 20px;
@@ -66,6 +65,7 @@
         }
         .icon-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.4); }
 
+        /* HOME */
         h1 {
             font-family: 'Fredoka One', cursive;
             font-size: 3.5rem;
@@ -179,7 +179,7 @@
             color: #666;
         }
 
-        /* MODALES */
+        /* MODALES (NUEVO) */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.85);
@@ -212,7 +212,6 @@
             margin-bottom: 15px; font-weight: bold; font-size: 1.1rem;
         }
         
-        /* SWITCH */
         .toggle-switch {
             width: 50px; height: 28px; background: #ccc; border-radius: 30px;
             position: relative; cursor: pointer; transition: 0.3s;
@@ -289,10 +288,10 @@
     </div>
 
     <script>
-        // CONFIGURACIÓN
+        // CONFIGURACIÓN Y ESTADO
         let settings = { sound: true, vibration: true };
         
-        // SONIDOS (Generados por código, sin archivos externos)
+        // SONIDOS (Generador WebAudio API)
         const SFX = {
             ctx: null,
             init: function() {
@@ -314,7 +313,6 @@
             }
         };
 
-        // --- BASE DE DATOS DE FRASES ---
         const DB = {
             tranqui: [
                 "me escapé de la escuela", "comí comida que se cayó al piso", "usé el cepillo de dientes de otra persona",
@@ -359,12 +357,11 @@
         }
 
         function startGame(mode) {
-            SFX.init(); // Inicializar audio
+            SFX.init();
             currentMode = mode;
             currentDeck = [...DB[mode]];
             usedDeck = [];
             
-            // Estilos según modo
             const body = document.body;
             const badge = document.getElementById('mode-badge');
             
@@ -386,7 +383,7 @@
         }
 
         function nextCard() {
-            if (settings.vibration && navigator.vibrate) navigator.vibrate(30); // Vibración corta
+            if (settings.vibration && navigator.vibrate) navigator.vibrate(30);
             SFX.playPop();
 
             if (currentDeck.length === 0) {
@@ -401,8 +398,6 @@
 
         function pickRandom() {
             const card = document.getElementById('game-card');
-            
-            // Efecto visual simple de cambio
             card.style.opacity = "0";
             card.style.transform = "scale(0.9) translateY(20px)";
 
