@@ -306,6 +306,83 @@
                     {t: "EMPANADA", s: ["empanada", "tarta"], p: 5}, 
                     {t: "NACHOS", s: ["nachos", "tacos"], p: 5} 
                 ] 
+            },
+            { 
+                q: "Cosa que hacés cuando estás nervioso", 
+                a: [ 
+                    {t: "MORDER UÑAS", s: ["uñas", "uña", "morder", "comerse las uñas"], p: 38}, 
+                    {t: "TAMBORILEAR", s: ["tamborilear", "golpear dedos", "dedos", "mesa"], p: 22}, 
+                    {t: "CAMINAR", s: ["caminar", "pasear", "dar vueltas"], p: 15}, 
+                    {t: "COMER", s: ["comer", "picar", "snack", "ansiedad"], p: 12}, 
+                    {t: "RASCARSE", s: ["rascarse", "rascar", "cabeza"], p: 8}, 
+                    {t: "SUSPIRAR", s: ["suspirar", "respirar", "soplar"], p: 5} 
+                ] 
+            },
+            { 
+                q: "Algo que siempre está roto en las casas", 
+                a: [ 
+                    {t: "SILLA", s: ["silla", "sillón", "banco"], p: 32}, 
+                    {t: "CONTROL REMOTO", s: ["control", "remoto", "mando"], p: 28}, 
+                    {t: "CANILLA", s: ["canilla", "grifo", "llave de agua", "pila"], p: 18}, 
+                    {t: "PUERTA", s: ["puerta", "manija", "cerradura", "picaporte"], p: 10}, 
+                    {t: "LÁMPARA", s: ["lámpara", "luz", "foco", "lamparita", "bombita"], p: 8}, 
+                    {t: "CAJÓN", s: ["cajón", "cajon", "mueble"], p: 4} 
+                ] 
+            },
+            { 
+                q: "Cosa que hacés solo cuando no te ve nadie", 
+                a: [ 
+                    {t: "CANTAR", s: ["cantar", "canturrear", "tararear"], p: 40}, 
+                    {t: "BAILAR", s: ["bailar", "mover", "perrear"], p: 25}, 
+                    {t: "HABLAR SOLO", s: ["hablar", "solo", "hablar solo", "monólogo"], p: 18}, 
+                    {t: "RASCARSE", s: ["rascar", "rascar", "picazón"], p: 10}, 
+                    {t: "HACER CARAS", s: ["caras", "muecas", "espejo"], p: 5}, 
+                    {t: "LLORAR", s: ["llorar", "lloriquear", "llanto"], p: 2} 
+                ] 
+            },
+            { 
+                q: "Profesión que aparece en películas de acción", 
+                a: [ 
+                    {t: "POLICÍA", s: ["policía", "policia", "detective", "agente", "cop"], p: 42}, 
+                    {t: "SOLDADO", s: ["soldado", "militar", "ejército", "ejercito"], p: 24}, 
+                    {t: "ESPÍA", s: ["espía", "espia", "agente secreto", "cia", "kgb"], p: 18}, 
+                    {t: "PILOTO", s: ["piloto", "aviador"], p: 9}, 
+                    {t: "MÉDICO", s: ["médico", "medico", "doctor", "cirujano"], p: 5}, 
+                    {t: "HACKER", s: ["hacker", "programador", "informático"], p: 2} 
+                ] 
+            },
+            { 
+                q: "Cosa que te arruina el día apenas abrís los ojos", 
+                a: [ 
+                    {t: "LLUVIA", s: ["lluvia", "llueve", "tormenta", "lloviendo"], p: 35}, 
+                    {t: "LUNES", s: ["lunes", "semana", "laburo", "trabajo"], p: 28}, 
+                    {t: "SIN LUZ", s: ["luz", "corte", "electricidad", "apagón", "apagon"], p: 20}, 
+                    {t: "ALARMA", s: ["alarma", "despertador", "sonido"], p: 10}, 
+                    {t: "RESACA", s: ["resaca", "cruda", "goma", "dolor de cabeza"], p: 5}, 
+                    {t: "SIN AGUA", s: ["agua", "sin agua", "corte de agua"], p: 2} 
+                ] 
+            },
+            { 
+                q: "Animal que no querrías encontrar en tu casa", 
+                a: [ 
+                    {t: "CUCARACHA", s: ["cucaracha", "cucara", "bicho"], p: 45}, 
+                    {t: "ARAÑA", s: ["araña", "arania", "tarántula"], p: 28}, 
+                    {t: "RATA", s: ["rata", "ratón", "raton", "laucha"], p: 15}, 
+                    {t: "SERPIENTE", s: ["serpiente", "víbora", "vibora", "culebra"], p: 8}, 
+                    {t: "MURCIÉLAGO", s: ["murciélago", "murcielago"], p: 3}, 
+                    {t: "ESCORPIÓN", s: ["escorpión", "escorpion", "alacrán", "alacran"], p: 1} 
+                ] 
+            },
+            { 
+                q: "Cosa que pasa sí o sí en un asado", 
+                a: [ 
+                    {t: "SE TARDA MUCHO", s: ["tarde", "tardanza", "demora", "esperar", "espera"], p: 38}, 
+                    {t: "ALGUIEN DIRIGE", s: ["director", "jefe", "manda", "mandón", "parrillero"], p: 24}, 
+                    {t: "FALTA ALGO", s: ["falta", "sal", "limón", "pan", "servilleta"], p: 18}, 
+                    {t: "CHORIPÁN PRIMERO", s: ["chori", "chorizo", "choripan", "choripán"], p: 12}, 
+                    {t: "ALGUIEN SE QUEJA", s: ["quejar", "queja", "crudo", "quemado"], p: 5}, 
+                    {t: "SE ACABA EL VINO", s: ["vino", "bebida", "fernet", "cerveza"], p: 3} 
+                ] 
             }
         ];
 
@@ -328,8 +405,9 @@
         // --- CORE ---
         function startGame() {
             SFX.init();
-            state.names[0] = document.getElementById('name1').value || "Equipo 1";
-            state.names[1] = document.getElementById('name2').value || "Equipo 2";
+            state.names[0] = document.getElementById('name1').value.trim() || "Equipo 1";
+            let nombre2 = document.getElementById('name2').value.trim() || "Equipo 2";
+            state.names[1] = nombre2 === state.names[0] ? nombre2 + " 2" : nombre2;
             state.questions = [...DB].sort(()=>Math.random()-0.5).slice(0, state.maxRounds);
             state.round = 0; state.scores = [0,0];
             
@@ -346,6 +424,11 @@
             
             // Reset
             state.strikes = {1:0, 2:0};
+            for(let t=1; t<=2; t++) {
+                for(let s=1; s<=3; s++) {
+                    document.getElementById(`x${t}-${s}`).classList.remove('active');
+                }
+            }
             state.roundOver = false;
             
             // UI Update
@@ -391,36 +474,32 @@
         }
 
         function processInput(text, teamId) {
-            // Normalizar entrada usuario
-            const cleanText = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            const clean = t => t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+            const cleanText = clean(text);
+            if(!cleanText) return;
             let matchIndex = -1;
 
             state.currentAnswers.forEach((ans, i) => {
-                if(ans.revealed) return;
+                if(ans.revealed || matchIndex !== -1) return;
                 
-                // Revisar sinónimos (si existen)
+                // Revisar título principal
+                if(clean(ans.t) === cleanText || clean(ans.t).includes(cleanText) || cleanText.includes(clean(ans.t))) {
+                    matchIndex = i; return;
+                }
+                // Revisar cada sinónimo
                 if(ans.s) {
-                    ans.s.forEach(synonym => {
-                        const cleanSyn = synonym.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                        // Coincidencia exacta o contenida (para plurales simples)
-                        if(cleanText === cleanSyn || (cleanText.length > 3 && cleanSyn.includes(cleanText))) {
+                    ans.s.forEach(syn => {
+                        if(matchIndex !== -1) return;
+                        const cleanSyn = clean(syn);
+                        if(cleanText === cleanSyn || cleanText.includes(cleanSyn) || cleanSyn.includes(cleanText)) {
                             matchIndex = i;
                         }
                     });
                 }
-                
-                // Revisar título principal también
-                const cleanTitle = ans.t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                if(cleanText === cleanTitle || (cleanText.length > 3 && cleanTitle.includes(cleanText))) {
-                    matchIndex = i;
-                }
             });
 
-            if(matchIndex !== -1) {
-                revealCard(matchIndex, teamId); 
-            } else {
-                triggerStrike(teamId); 
-            }
+            if(matchIndex !== -1) revealCard(matchIndex, teamId);
+            else triggerStrike(teamId);
         }
 
         function manualReveal(idx) {
@@ -483,6 +562,14 @@
         }
 
         function nextRound() {
+            // Solo avanza si todas las cartas están reveladas O si la ronda terminó por strikes
+            const todasReveladas = state.currentAnswers.every(a => a.revealed);
+            if(!todasReveladas && !state.roundOver) {
+                // Aviso visual: hace parpadear el tablero brevemente
+                document.getElementById('board').style.opacity = '0.5';
+                setTimeout(() => document.getElementById('board').style.opacity = '1', 300);
+                return;
+            }
             state.round++;
             loadRound();
         }
